@@ -141,7 +141,7 @@
             box-shadow: 8px 8px 0px 0px #000000;
         }
         
-        /* Widget Mode 樣式修改：卡片寬度改為 400px */
+        /* Widget Mode 樣式修改：卡片寬度改為 200px */
         body.widget-mode { background: transparent !important; min-height: auto !important; overflow: hidden; }
         body.widget-mode nav, body.widget-mode #control-bar, body.widget-mode #album-grid, body.widget-mode #empty-state, body.widget-mode .fixed.bottom-4 { display: none !important; }
 
@@ -151,7 +151,7 @@
         .marquee-track:hover { animation-play-state: paused; }
         
         .widget-card { 
-            width: 400px; /* 修改：卡片寬度設為 400px */
+            width: 200px; /* 修改：卡片寬度設為 200px */
             margin-right: 20px; 
             flex-shrink: 0; 
             background: var(--card-bg); 
@@ -454,7 +454,7 @@
                     <label class="text-xs font-bold block">嵌入語法 (Iframe)</label>
                     <textarea id="embed-code-output" readonly rows="4" class="w-full border text-xs p-2 rounded bg-gray-800 text-green-400 font-mono focus:outline-none"></textarea>
                     <button onclick="copyEmbedCode()" class="w-full bg-gray-200 hover:bg-gray-300 text-xs py-2 rounded font-bold"><i class="fa-solid fa-copy"></i> 複製語法</button>
-                    <p class="text-[10px] text-gray-500">提示：顯示兩排相簿，建議嵌入高度設為 720px。</p>
+                    <p class="text-[10px] text-gray-500">提示：顯示兩排相簿，建議嵌入高度設為 480px。</p>
                 </div>
             </div>
 
@@ -1122,7 +1122,7 @@ function proxyShortenUrl(longUrl) {
                     
                     contentHTML += `
                     <div class="widget-card group" onclick="window.open('${fullUrl}', '_blank')">
-                        <div class="relative h-64 overflow-hidden bg-gray-200">
+                        <div class="relative h-36 overflow-hidden bg-gray-200">
                             <img src="${coverUrl}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500" loading="lazy" alt="${album.name}">
                             <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition flex items-center justify-center">
                                 <i class="fa-solid fa-arrow-up-right-from-square text-white opacity-0 group-hover:opacity-100 text-2xl drop-shadow-md"></i>
@@ -1675,7 +1675,7 @@ function proxyShortenUrl(longUrl) {
             const widgetUrl = `${baseUrl}?title=${encodeURIComponent(title)}&config=${config}&mode=widget&limit=${limit}`;
             
             // 產生 Iframe Tag (調整高度以容納兩排)
-            const iframeCode = `<iframe src="${widgetUrl}" width="100%" height="720" frameborder="0" scrolling="no" style="border:none; overflow:hidden; background:transparent;"></iframe>`;
+            const iframeCode = `<iframe src="${widgetUrl}" width="100%" height="480" frameborder="0" scrolling="no" style="border:none; overflow:hidden; background:transparent;"></iframe>`;
 
             document.getElementById('embed-code-output').value = iframeCode;
             
