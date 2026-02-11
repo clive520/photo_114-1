@@ -180,6 +180,8 @@
         <div id="loading" class="flex flex-col items-center justify-center mt-20 hidden">
             <div class="loader mb-4"></div>
             <p id="loading-text" class="text-lg font-bold opacity-70 animate-pulse">正在讀取相簿資料...</p>
+            <!-- 新增提示文字 -->
+            <p class="text-sm font-bold text-red-500 mt-3 animate-pulse">第一次讀取相簿時較久，請耐心等候！！</p>
         </div>
 
         <!-- 錯誤訊息 / 歡迎畫面 -->
@@ -378,8 +380,11 @@
                 container.innerHTML = `
                     <div class="w-full h-full flex flex-col justify-center items-center">
                         <div class="loader mb-2"></div>
-                        <div class="text-gray-500 font-bold text-sm bg-white/80 px-3 py-1 rounded-full backdrop-blur-sm shadow-sm">
+                        <div class="text-gray-500 font-bold text-sm bg-white/80 px-3 py-1 rounded-full backdrop-blur-sm shadow-sm mb-1">
                             相簿讀取中...
+                        </div>
+                         <div class="text-gray-600 text-xs bg-white/80 px-2 py-0.5 rounded backdrop-blur-sm font-bold">
+                            第一次讀取相簿時較久，請耐心等候！！
                         </div>
                     </div>
                 `;
