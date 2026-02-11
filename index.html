@@ -142,7 +142,6 @@
         <div id="loading" class="flex flex-col items-center justify-center mt-20 hidden">
             <div class="loader mb-4"></div>
             <p id="loading-text" class="text-lg font-bold opacity-70 animate-pulse">正在讀取相簿資料...</p>
-            <!-- 修改文字 -->
             <p class="text-sm font-bold text-red-500 mt-3 animate-pulse">第一次整理相簿比較慢，我正在翻箱倒櫃中，請稍候！</p>
         </div>
 
@@ -497,17 +496,24 @@
             document.getElementById('gallery-modal').classList.remove('hidden');
         }
         function closeGallery() { document.getElementById('gallery-modal').classList.add('hidden'); document.getElementById('main-view').innerHTML = ''; stopPresentationTimer(); }
+        
         function updateMainPhoto() {
              const photo = currentAlbumPhotos[currentPhotoIndex];
-             let content = photo.type.startsWith('video') 
-                ? `<video src="${photo.downloadUrl}" controls autoplay class="max-w-full max-h-full object-contain shadow-2xl"></video>`
-                : `<img src="${photo.url}" onclick="document.getElementById('fullscreen-modal').classList.remove('hidden');document.getElementById('fullscreen-image').src=this.src;" class="max-w-full max-h-full object-contain shadow-2xl cursor-zoom-in">`;
-             document.getElementById('main-view').innerHTML = content;
+             const mainView = document.getElementById('main-view');
+             
+             if (photo.type.startsWith('video')) {
+                 // 修改：改用 iframe 載入 Google Drive 預覽頁面，解決 MOV/MP4 播放與權限問題
+                 mainView.innerHTML = `<iframe src="https://drive.google.com/file/d/${photo.id}/preview" class="w-full h-full border-0 shadow-2xl" allow="autoplay; fullscreen"></iframe>`;
+             } else {
+                 mainView.innerHTML = `<img src="${photo.url}" onclick="document.getElementById('fullscreen-modal').classList.remove('hidden');document.getElementById('fullscreen-image').src=this.src;" class="max-w-full max-h-full object-contain shadow-2xl cursor-zoom-in">`;
+             }
+             
              // Update Thumbnails
              document.querySelectorAll('#thumbnail-strip > div').forEach(el => el.classList.remove('thumb-active'));
              const activeThumb = document.getElementById(`thumb-${currentPhotoIndex}`);
              if (activeThumb) { activeThumb.classList.add('thumb-active'); activeThumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); }
         }
+
         function nextPhoto() { currentPhotoIndex = (currentPhotoIndex+1)%currentAlbumPhotos.length; updateMainPhoto(); }
         function prevPhoto() { currentPhotoIndex = (currentPhotoIndex-1+currentAlbumPhotos.length)%currentAlbumPhotos.length; updateMainPhoto(); }
 
@@ -569,8 +575,14 @@
                                 return fetch(photo.url).then(res => res.blob());
                             });
                     } else {
-                        // 快速下載：直接用 s800 預覽圖
-                        fetchPromise = fetch(photo.url).then(res => res.blob());
+                        // 快速下載
+                        if (photo.type.includes('video')) {
+                            // 如果是影片且選快速下載，因為沒有壓縮影片檔，改為下載縮圖 (jpg)
+                            ext = 'jpg'; 
+                            fetchPromise = fetch(photo.url).then(res => res.blob());
+                        } else {
+                            fetchPromise = fetch(photo.url).then(res => res.blob());
+                        }
                     }
 
                     const blob = await fetchPromise;
@@ -658,8 +670,17 @@
             const photo = currentAlbumPhotos[index];
             const stage = document.getElementById('slide-stage');
             let el;
-            if (photo.type.startsWith('video')) { el = document.createElement('video'); el.src = photo.downloadUrl; el.autoplay = true; el.muted = true; el.loop = true; } 
-            else { el = document.createElement('img'); el.src = photo.url; }
+            if (photo.type.startsWith('video')) { 
+                // 修改：簡報模式也改用 iframe
+                el = document.createElement('iframe'); 
+                el.src = `https://drive.google.com/file/d/${photo.id}/preview`; 
+                el.allow = "autoplay; fullscreen";
+                el.style.border = "0";
+            } 
+            else { 
+                el = document.createElement('img'); 
+                el.src = photo.url; 
+            }
             el.className = `slide-image ${initialClass}`;
             stage.appendChild(el);
             return el;
