@@ -142,7 +142,8 @@
         <div id="loading" class="flex flex-col items-center justify-center mt-20 hidden">
             <div class="loader mb-4"></div>
             <p id="loading-text" class="text-lg font-bold opacity-70 animate-pulse">正在讀取相簿資料...</p>
-            <p class="text-sm font-bold text-red-500 mt-3 animate-pulse">第一次讀取相簿時間較久，請耐心等候！！</p>
+            <!-- 修改文字 -->
+            <p class="text-sm font-bold text-red-500 mt-3 animate-pulse">第一次整理相簿比較慢，我正在翻箱倒櫃中，請稍候！</p>
         </div>
 
         <div id="empty-state" class="hidden flex flex-col items-center justify-center mt-10 p-8 theme-card border-4 border-dashed border-kids-yellow max-w-lg mx-auto">
@@ -180,7 +181,7 @@
         <div class="font-bold">Made by <a href="https://gsyan888.blogspot.com/" target="_blank" class="text-kids-blue underline">阿剛老師</a></div>
     </div>
 
-    <!-- Gallery Modal (修復版：加入 Header 按鈕與縮圖列) -->
+    <!-- Gallery Modal -->
     <div id="gallery-modal" class="hidden fixed inset-0 z-[60] bg-black bg-opacity-95 flex flex-col">
         <!-- Header -->
         <div class="flex justify-between items-center p-3 text-white shrink-0 bg-gradient-to-b from-gray-900 to-transparent z-10">
@@ -211,7 +212,7 @@
             <button onclick="nextPhoto()" class="absolute right-2 md:right-4 z-20 text-white text-2xl md:text-4xl opacity-50 group-hover:opacity-100 transition bg-black bg-opacity-40 hover:bg-opacity-70 rounded-full w-10 h-10 md:w-14 md:h-14 flex items-center justify-center focus:outline-none">❯</button>
         </div>
 
-        <!-- Thumbnail Strip (修復) -->
+        <!-- Thumbnail Strip -->
         <div id="thumbnail-strip" class="h-24 md:h-28 bg-gray-900 shrink-0 flex items-center p-2 space-x-2 overflow-x-auto hide-scrollbar border-t border-gray-800 z-10"></div>
     </div>
     
@@ -351,7 +352,8 @@
                 widgetLimit = limitParam ? parseInt(limitParam, 10) : 16;
                 const container = document.getElementById('widget-container');
                 container.classList.remove('hidden');
-                container.innerHTML = `<div class="w-full h-full flex flex-col justify-center items-center"><div class="loader mb-2"></div><div class="text-gray-500 font-bold text-sm bg-white/80 px-3 py-1 rounded-full backdrop-blur-sm shadow-sm mb-1">相簿讀取中...</div><div class="text-gray-600 text-xs bg-white/80 px-2 py-0.5 rounded backdrop-blur-sm font-bold">第一次讀取相簿時間較久，請耐心等候！！</div></div>`;
+                // 修改小工具模式的載入文字
+                container.innerHTML = `<div class="w-full h-full flex flex-col justify-center items-center"><div class="loader mb-2"></div><div class="text-gray-500 font-bold text-sm bg-white/80 px-3 py-1 rounded-full backdrop-blur-sm shadow-sm mb-1">相簿讀取中...</div><div class="text-gray-600 text-xs bg-white/80 px-2 py-0.5 rounded backdrop-blur-sm font-bold">第一次整理相簿比較慢，我正在翻箱倒櫃中，請稍候！</div></div>`;
             }
             const config = urlParams.get('config');
             if (config) {
@@ -509,28 +511,79 @@
         function nextPhoto() { currentPhotoIndex = (currentPhotoIndex+1)%currentAlbumPhotos.length; updateMainPhoto(); }
         function prevPhoto() { currentPhotoIndex = (currentPhotoIndex-1+currentAlbumPhotos.length)%currentAlbumPhotos.length; updateMainPhoto(); }
 
-        // Download Zip
+        // Download Zip (升級版)
         async function downloadAlbumZip() {
             if (currentAlbumPhotos.length === 0) return;
             const albumName = document.getElementById('gallery-title').innerText;
-            const result = await Swal.fire({ title: '準備下載', text: `即將下載「${albumName}」的 ${currentAlbumPhotos.length} 張照片。`, icon: 'info', showCancelButton: true, confirmButtonText: '開始下載' });
-            if (!result.isConfirmed) return;
+            
+            // 選單：選擇下載模式
+            const { value: downloadType } = await Swal.fire({
+                title: '選擇下載模式',
+                text: `即將下載「${albumName}」的 ${currentAlbumPhotos.length} 張照片`,
+                icon: 'question',
+                input: 'radio',
+                inputOptions: {
+                    'fast': '🚀 快速下載 (壓縮圖：速度快)',
+                    'original': '💾 原始檔案下載 (高畫質：速度慢、需等待)'
+                },
+                inputValue: 'fast', // 預設選項
+                showCancelButton: true,
+                confirmButtonText: '開始下載',
+                cancelButtonText: '取消',
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33'
+            });
+
+            if (!downloadType) return; // 使用者取消
+
             const zip = new JSZip();
             const folder = zip.folder(albumName);
-            Swal.fire({ title: '打包中...', didOpen: () => Swal.showLoading() });
+            
+            Swal.fire({
+                title: '打包中...',
+                text: downloadType === 'original' ? '正在從雲端硬碟抓取原始檔案，請耐心稍候...' : '正在快速打包照片...',
+                didOpen: () => Swal.showLoading(),
+                allowOutsideClick: false
+            });
             
             const promises = currentAlbumPhotos.map(async (photo, i) => {
                 try {
-                    // Try fetch blob
-                    const res = await fetch(photo.downloadUrl, { mode: 'cors' }).catch(() => fetch(photo.url)); // Fallback to preview url
-                    const blob = await res.blob();
-                    folder.file(`${albumName}_${i+1}.${photo.type.includes('video')?'mp4':'jpg'}`, blob);
-                } catch (e) { console.error(e); }
+                    let fetchPromise;
+                    let ext = photo.type.includes('video') ? 'mp4' : 'jpg';
+
+                    if (downloadType === 'original') {
+                        // 嘗試下載原始檔案
+                        fetchPromise = fetch(photo.downloadUrl, { mode: 'cors' })
+                            .then(res => {
+                                if (!res.ok) throw new Error('Fetch failed');
+                                return res.blob();
+                            })
+                            .catch(() => {
+                                // 失敗時嘗試使用 lh3 的高畫質參數 (=d 強制下載)
+                                const originalLh3 = photo.url.replace(/=s\d+$/, '=d');
+                                return fetch(originalLh3).then(res => res.blob());
+                            })
+                            .catch(() => {
+                                // 真的不行就用壓縮圖當備案，避免下載失敗
+                                console.warn(`無法下載原始檔: ${photo.name}，改用預覽圖`);
+                                return fetch(photo.url).then(res => res.blob());
+                            });
+                    } else {
+                        // 快速下載：直接用 s800 預覽圖
+                        fetchPromise = fetch(photo.url).then(res => res.blob());
+                    }
+
+                    const blob = await fetchPromise;
+                    folder.file(`${albumName}_${i+1}.${ext}`, blob);
+                } catch (e) { 
+                    console.error("下載單張失敗", e); 
+                }
             });
+
             await Promise.all(promises);
             const content = await zip.generateAsync({ type: "blob" });
             saveAs(content, `${albumName}.zip`);
-            Swal.fire('下載完成', '', 'success');
+            Swal.fire('下載完成', downloadType === 'original' ? '原始檔案打包完成！' : '快速打包完成！', 'success');
         }
 
         // Presentation Mode
