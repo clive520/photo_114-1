@@ -517,7 +517,7 @@
         function nextPhoto() { currentPhotoIndex = (currentPhotoIndex+1)%currentAlbumPhotos.length; updateMainPhoto(); }
         function prevPhoto() { currentPhotoIndex = (currentPhotoIndex-1+currentAlbumPhotos.length)%currentAlbumPhotos.length; updateMainPhoto(); }
 
-        // Download Zip (升級版)
+        // Download Zip (升級版：解決影片下載問題)
         async function downloadAlbumZip() {
             if (currentAlbumPhotos.length === 0) return;
             const albumName = document.getElementById('gallery-title').innerText;
@@ -547,7 +547,7 @@
             
             Swal.fire({
                 title: '打包中...',
-                text: downloadType === 'original' ? '正在從雲端硬碟抓取原始檔案，請耐心稍候...' : '正在快速打包照片...',
+                text: downloadType === 'original' ? '正在從雲端硬碟抓取原始檔案，影片過大時將改用高畫質串流檔...' : '正在快速打包照片...',
                 didOpen: () => Swal.showLoading(),
                 allowOutsideClick: false
             });
@@ -558,26 +558,41 @@
                     let ext = photo.type.includes('video') ? 'mp4' : 'jpg';
 
                     if (downloadType === 'original') {
-                        // 嘗試下載原始檔案
-                        fetchPromise = fetch(photo.downloadUrl, { mode: 'cors' })
-                            .then(res => {
-                                if (!res.ok) throw new Error('Fetch failed');
-                                return res.blob();
-                            })
-                            .catch(() => {
-                                // 失敗時嘗試使用 lh3 的高畫質參數 (=d 強制下載)
-                                const originalLh3 = photo.url.replace(/=s\d+$/, '=d');
-                                return fetch(originalLh3).then(res => res.blob());
-                            })
-                            .catch(() => {
-                                // 真的不行就用壓縮圖當備案，避免下載失敗
-                                console.warn(`無法下載原始檔: ${photo.name}，改用預覽圖`);
-                                return fetch(photo.url).then(res => res.blob());
-                            });
-                    } else {
-                        // 快速下載
                         if (photo.type.includes('video')) {
-                            // 如果是影片且選快速下載，因為沒有壓縮影片檔，改為下載縮圖 (jpg)
+                            // 影片特殊處理邏輯：防止下載到病毒掃描 HTML 頁面
+                            try {
+                                const response = await fetch(photo.downloadUrl, { mode: 'cors' });
+                                const contentType = response.headers.get('content-type');
+                                
+                                // 檢查是否被 Google Drive 擋下來 (回傳了 HTML 而不是影片)
+                                if (contentType && contentType.includes('text/html')) {
+                                    console.warn(`原始影片下載受阻 (ID: ${photo.id})，嘗試降級下載串流版本...`);
+                                    // 嘗試下載 720p 串流版本 (m22 = 720p, m18 = 360p)
+                                    // 這通常可以直接下載而不會被擋
+                                    const fallbackUrl = `https://lh3.googleusercontent.com/d/${photo.id}=m22`;
+                                    fetchPromise = fetch(fallbackUrl).then(res => {
+                                        if(!res.ok) throw new Error("Fallback failed");
+                                        return res.blob();
+                                    });
+                                } else {
+                                    // 正常下載
+                                    fetchPromise = response.blob();
+                                }
+                            } catch (e) {
+                                // 如果上面都失敗，嘗試最後一招：下載預覽圖當作替代，避免 ZIP 損毀
+                                console.error("影片下載失敗，改存預覽圖", e);
+                                ext = 'jpg';
+                                fetchPromise = fetch(photo.url).then(res => res.blob());
+                            }
+                        } else {
+                            // 圖片直接下載
+                            fetchPromise = fetch(photo.downloadUrl, { mode: 'cors' })
+                                .catch(() => fetch(photo.url.replace(/=s\d+$/, '=d'))); // 失敗嘗試 =d
+                        }
+                    } else {
+                        // 快速下載模式
+                        if (photo.type.includes('video')) {
+                            // 快速模式下，影片只下載封面圖 (JPG)
                             ext = 'jpg'; 
                             fetchPromise = fetch(photo.url).then(res => res.blob());
                         } else {
@@ -586,16 +601,18 @@
                     }
 
                     const blob = await fetchPromise;
-                    folder.file(`${albumName}_${i+1}.${ext}`, blob);
+                    if (blob) {
+                        folder.file(`${albumName}_${i+1}.${ext}`, blob);
+                    }
                 } catch (e) { 
-                    console.error("下載單張失敗", e); 
+                    console.error(`下載單張失敗: ${photo.name}`, e); 
                 }
             });
 
             await Promise.all(promises);
             const content = await zip.generateAsync({ type: "blob" });
             saveAs(content, `${albumName}.zip`);
-            Swal.fire('下載完成', downloadType === 'original' ? '原始檔案打包完成！' : '快速打包完成！', 'success');
+            Swal.fire('下載完成', downloadType === 'original' ? '原始檔案打包完成！(影片如無法下載已自動轉為串流版)' : '快速打包完成！(影片僅含封面)', 'success');
         }
 
         // Presentation Mode
