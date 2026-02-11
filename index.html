@@ -20,7 +20,7 @@
 
     <script>
         tailwind.config = {
-            darkMode: 'class', 
+            darkMode: 'class', // 啟用 class 模式以便手動控制
             theme: {
                 extend: {
                     fontFamily: {
@@ -52,7 +52,7 @@
         }
     </script>
     <style>
-        /* --- 基礎 CSS 變數 --- */
+        /* --- 基礎 CSS 變數 (預設: 溫馨手繪) --- */
         :root {
             --color-primary: #FFD93D;
             --color-accent: #FF6B6B;
@@ -61,51 +61,134 @@
             --color-bg: #F7F2E7;
             --text-main: #374151;
             --card-bg: #ffffff;
+            --border-width: 0px;
+            --border-color: transparent;
+            --shadow-style: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --radius-main: 1.5rem; /* rounded-3xl */
+            --radius-btn: 9999px; /* rounded-full */
             --bg-pattern: radial-gradient(#FFD93D 2px, transparent 2px);
             --bg-size: 30px 30px;
         }
 
-        [data-theme="modern"] { --color-bg: #0f172a; --card-bg: #1e293b; --text-main: #e2e8f0; --bg-pattern: linear-gradient(to right, #1e293b 1px, transparent 1px); }
-        [data-theme="pop"] { --color-bg: #FFFFFF; --card-bg: #FFFFFF; --text-main: #000000; --bg-pattern: radial-gradient(#000 15%, transparent 16%); }
+        /* --- 主題：現代科技 (Modern) --- */
+        [data-theme="modern"] {
+            --color-primary: #0ea5e9; /* Sky Blue */
+            --color-accent: #f43f5e; /* Rose */
+            --color-secondary: #6366f1; /* Indigo */
+            --color-success: #10b981; /* Emerald */
+            --color-bg: #0f172a; /* Slate 900 */
+            --text-main: #e2e8f0; /* Slate 200 */
+            --card-bg: #1e293b; /* Slate 800 */
+            --border-width: 1px;
+            --border-color: #334155;
+            --shadow-style: 0 0 15px rgba(14, 165, 233, 0.3); /* Glow effect */
+            --radius-main: 0.5rem; /* rounded-lg */
+            --radius-btn: 0.25rem; /* rounded */
+            /* 科技網格背景 */
+            --bg-pattern: linear-gradient(to right, #1e293b 1px, transparent 1px), linear-gradient(to bottom, #1e293b 1px, transparent 1px);
+            --bg-size: 40px 40px;
+        }
 
+        /* --- 主題：普普藝術 (Pop Art) --- */
+        [data-theme="pop"] {
+            --color-primary: #FFD600; /* Vivid Yellow */
+            --color-accent: #FF0055; /* Vivid Red */
+            --color-secondary: #0099FF; /* Vivid Blue */
+            --color-success: #00CC00;
+            --color-bg: #FFFFFF;
+            --text-main: #000000;
+            --card-bg: #FFFFFF;
+            --border-width: 3px;
+            --border-color: #000000;
+            --shadow-style: 4px 4px 0px 0px #000000; /* Hard Shadow */
+            --radius-main: 0px;
+            --radius-btn: 0px;
+            /* 網點背景 (Halftone) */
+            --bg-pattern: radial-gradient(#000 15%, transparent 16%);
+            --bg-size: 16px 16px;
+        }
+
+        /* --- 應用變數 --- */
         body { 
             background-color: var(--color-bg); 
             background-image: var(--bg-pattern); 
             background-size: var(--bg-size); 
             color: var(--text-main);
             display: flex; flex-direction: column; min-height: 100vh;
+            transition: background-color 0.5s ease, color 0.3s ease;
         }
 
+        /* 卡片與容器樣式覆寫 */
         .theme-card {
             background-color: var(--card-bg);
-            border-radius: 1rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: var(--border-width) solid var(--border-color);
+            box-shadow: var(--shadow-style);
+            border-radius: var(--radius-main);
+            transition: all 0.3s ease;
         }
-
-        /* --- Widget Mode --- */
-        body.widget-mode { background: transparent !important; min-height: auto !important; overflow: hidden; }
-        body.widget-mode nav, body.widget-mode #control-bar, body.widget-mode #album-grid, body.widget-mode #empty-state, body.widget-mode .fixed.bottom-4 { display: none !important; }
-
-        .marquee-wrapper { position: relative; width: 100%; overflow: hidden; display: flex; align-items: center; background: rgba(255, 255, 255, 0.5); backdrop-filter: blur(4px); border-radius: 12px; }
-        [data-theme="modern"] .marquee-wrapper { background: rgba(0, 0, 0, 0.5); }
-        .marquee-track { display: flex; width: max-content; }
-        .marquee-track:hover { animation-play-state: paused; }
-        .widget-card { width: 280px; margin-right: 20px; flex-shrink: 0; background: var(--card-bg); border-radius: 12px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: transform 0.2s; cursor: pointer; }
-        .widget-card:hover { transform: scale(1.02); }
-
+        .theme-btn {
+            border-radius: var(--radius-btn);
+            box-shadow: var(--shadow-style);
+        }
+        
+        /* 針對不同主題的特殊微調 */
+        [data-theme="modern"] .card-hover:hover {
+            box-shadow: 0 0 25px rgba(14, 165, 233, 0.6);
+            border-color: var(--color-primary);
+        }
+        [data-theme="pop"] .card-hover:hover {
+            transform: translate(-4px, -4px);
+            box-shadow: 8px 8px 0px 0px #000000;
+        }
+        
+        /* 一般樣式 */
         .loader { border: 5px solid #f3f3f3; border-top: 5px solid var(--color-accent); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .thumb-active { border: 3px solid var(--color-primary); opacity: 1 !important; transform: scale(1.05); }
+        .cursor-zoom-in { cursor: zoom-in; }
         .cursor-crosshair { cursor: crosshair; }
-        
-        /* Slide CSS */
-        .slide-stage { position: relative; width: 100%; height: 100%; overflow: hidden; display: flex; align-items: center; justify-content: center; background-color: black; }
-        .slide-image { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1); will-change: transform; }
+
+        /* --- 滑動轉場 CSS --- */
+        .slide-stage {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: black;
+        }
+        .slide-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1); 
+            will-change: transform;
+        }
         .slide-center { transform: translateX(0%); }
         .slide-left   { transform: translateX(-100%); }
         .slide-right  { transform: translateX(100%); }
+        
         .toolbar-hidden { display: none !important; }
+        
+        /* 排序按鈕激活狀態 (使用變數) */
+        .sort-btn-active {
+            background-color: var(--color-secondary) !important;
+            color: white !important;
+            border-color: var(--color-secondary) !important;
+        }
+        
+        /* 主題選單樣式 */
+        #theme-menu {
+            transform-origin: top right;
+            transition: transform 0.2s ease-out, opacity 0.2s ease-out;
+        }
     </style>
 </head>
 <body class="font-sans">
@@ -118,151 +201,221 @@
                 <h1 id="app-header-title" class="text-xl md:text-2xl font-bold tracking-wide">快樂小學堂相簿</h1>
             </div>
             <div class="flex items-center space-x-3 relative">
+                <!-- 主題切換按鈕 -->
                 <div class="relative">
-                    <button onclick="toggleThemeMenu()" class="bg-kids-green hover:brightness-110 text-white p-2 w-10 h-10 rounded-full flex items-center justify-center transition" title="切換風格">
+                    <button onclick="toggleThemeMenu()" class="theme-btn bg-kids-green hover:brightness-110 text-white p-2 w-10 h-10 transition flex items-center justify-center" title="切換風格">
                         <i class="fa-solid fa-palette"></i>
                     </button>
-                    <div id="theme-menu" class="hidden absolute right-0 mt-2 w-40 bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden z-50">
-                        <button onclick="switchTheme('kids')" class="w-full text-left px-4 py-3 hover:bg-gray-100 flex items-center text-gray-700 dark:text-gray-200"><i class="fa-solid fa-child-reaching w-6 text-yellow-500"></i> 溫馨手繪</button>
-                        <button onclick="switchTheme('modern')" class="w-full text-left px-4 py-3 hover:bg-gray-100 flex items-center text-gray-700 dark:text-gray-200"><i class="fa-solid fa-microchip w-6 text-blue-500"></i> 現代科技</button>
-                        <button onclick="switchTheme('pop')" class="w-full text-left px-4 py-3 hover:bg-gray-100 flex items-center text-gray-700 dark:text-gray-200"><i class="fa-solid fa-bolt w-6 text-red-500"></i> 普普藝術</button>
+                    <!-- 主題選單 -->
+                    <div id="theme-menu" class="hidden absolute right-0 mt-2 w-40 theme-card !p-0 overflow-hidden z-50">
+                        <button onclick="switchTheme('kids')" class="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition border-b border-gray-100 flex items-center">
+                            <i class="fa-solid fa-child-reaching w-6 text-yellow-500"></i> 溫馨手繪
+                        </button>
+                        <button onclick="switchTheme('modern')" class="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition border-b border-gray-100 flex items-center">
+                            <i class="fa-solid fa-microchip w-6 text-blue-500"></i> 現代科技
+                        </button>
+                        <button onclick="switchTheme('pop')" class="w-full text-left px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition flex items-center">
+                            <i class="fa-solid fa-bolt w-6 text-red-500"></i> 普普藝術
+                        </button>
                     </div>
                 </div>
-                <button onclick="openSettings()" class="bg-kids-blue hover:brightness-110 text-white p-2 w-10 h-10 rounded-full transition"><i class="fa-solid fa-gear"></i></button>
-                <button onclick="openHelp()" class="bg-kids-red hover:brightness-110 text-white p-2 w-10 h-10 rounded-full transition"><i class="fa-solid fa-info"></i></button>
+
+                <button onclick="openSettings()" class="theme-btn bg-kids-blue hover:brightness-110 text-white p-2 w-10 h-10 transition">
+                    <i class="fa-solid fa-gear"></i>
+                </button>
+                <button onclick="openHelp()" class="theme-btn bg-kids-red hover:brightness-110 text-white p-2 w-10 h-10 transition">
+                    <i class="fa-solid fa-info"></i>
+                </button>
             </div>
         </div>
     </nav>
 
-    <!-- Widget 容器 -->
-    <div id="widget-container" class="hidden w-full h-full p-2"></div>
-
     <!-- 主內容區 -->
     <main class="container mx-auto px-4 py-8 flex-grow">
+        <!-- 載入中動畫 -->
         <div id="loading" class="flex flex-col items-center justify-center mt-20 hidden">
             <div class="loader mb-4"></div>
-            <p id="loading-text" class="text-lg font-bold opacity-70 animate-pulse">正在讀取相簿資料...</p>
+            <p id="loading-text" class="text-lg font-bold opacity-70 animate-pulse">正在去雲端搬運照片...</p>
             <p class="text-sm font-bold text-red-500 mt-3 animate-pulse">第一次整理相簿比較慢，我正在翻箱倒櫃中，請稍候！</p>
         </div>
 
+        <!-- 錯誤訊息 / 歡迎畫面 -->
         <div id="empty-state" class="hidden flex flex-col items-center justify-center mt-10 p-8 theme-card border-4 border-dashed border-kids-yellow max-w-lg mx-auto">
             <i class="fa-solid fa-images text-6xl opacity-30 mb-4"></i>
             <h2 class="text-2xl font-bold mb-2">還沒有看到相簿喔！</h2>
             <p class="text-center opacity-60 mb-6">請先點擊右上角的設定 (⚙️) 按鈕<br>貼上你的 GAS 網址來連線。</p>
-            <button onclick="openSettings()" class="bg-kids-yellow hover:brightness-110 text-gray-800 font-bold py-2 px-6 rounded-full transition">
+            <button onclick="openSettings()" class="theme-btn bg-kids-yellow hover:brightness-110 text-gray-800 font-bold py-2 px-6 transition">
                 <i class="fa-solid fa-plug mr-2"></i> 立即連線
             </button>
         </div>
         
+        <!-- 搜尋與排序控制列 -->
         <div id="control-bar" class="hidden flex flex-col md:flex-row justify-between items-center mb-6 gap-4 theme-card p-3">
             <div class="flex items-center w-full md:w-1/2 space-x-2">
+                <!-- 搜尋框 -->
                 <div class="relative flex-grow">
                     <input type="text" id="search-input" oninput="handleSearch(this.value)" placeholder="🔍 搜尋相簿名稱..." 
                            class="w-full pl-10 pr-4 py-2 rounded-full border border-gray-300 bg-transparent focus:outline-none focus:ring-2 focus:ring-kids-blue transition">
                     <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 opacity-50"></i>
                 </div>
-                <button onclick="syncAlbums()" id="btn-sync" class="bg-kids-blue hover:brightness-110 text-white px-4 py-2 rounded-full flex items-center transition shadow-md">
-                    <i id="sync-icon" class="fa-solid fa-rotate mr-2"></i> 檢查更新
+                <!-- 同步按鈕 (新功能) -->
+                <button onclick="syncAlbums()" id="btn-sync" class="theme-btn bg-kids-blue hover:brightness-110 text-white px-4 py-2 flex items-center transition whitespace-nowrap shadow-md" title="檢查雲端更新">
+                    <i id="sync-icon" class="fa-solid fa-rotate mr-2"></i>
+                    <span class="hidden sm:inline">檢查更新</span>
                 </button>
             </div>
+            
+            <!-- 排序按鈕 -->
             <div class="flex items-center space-x-2 text-sm w-full md:w-auto justify-end overflow-x-auto">
-                <span class="font-bold opacity-70 mr-1">排序:</span>
-                <button onclick="setSortMode('default')" class="sort-btn px-3 py-1 rounded-full border border-gray-300 bg-kids-blue text-white">時間</button>
-                <button onclick="setSortMode('name')" class="sort-btn px-3 py-1 rounded-full border border-gray-300">名稱</button>
-                <button onclick="setSortMode('count')" class="sort-btn px-3 py-1 rounded-full border border-gray-300">數量</button>
+                <span class="font-bold opacity-70 whitespace-nowrap mr-1"><i class="fa-solid fa-arrow-down-short-wide mr-1"></i>排序:</span>
+                <button onclick="setSortMode('default')" id="btn-sort-default" class="sort-btn px-3 py-1.5 rounded-full border border-gray-300 opacity-80 hover:opacity-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition whitespace-nowrap sort-btn-active">預設 (時間)</button>
+                <button onclick="setSortMode('name')" id="btn-sort-name" class="sort-btn px-3 py-1.5 rounded-full border border-gray-300 opacity-80 hover:opacity-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition whitespace-nowrap">名稱 (A-Z)</button>
+                <button onclick="setSortMode('count')" id="btn-sort-count" class="sort-btn px-3 py-1.5 rounded-full border border-gray-300 opacity-80 hover:opacity-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition whitespace-nowrap">數量 (多到少)</button>
             </div>
         </div>
 
-        <div id="album-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 pb-20"></div>
+        <!-- 相簿列表 -->
+        <div id="album-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 pb-20">
+            <!-- JS 動態插入相簿卡片 -->
+        </div>
     </main>
 
-    <div class="fixed bottom-4 right-4 z-40 theme-card !bg-opacity-90 backdrop-blur-sm p-3 text-xs flex flex-col items-end space-y-1 transition hover:opacity-100 opacity-80">
-        <div class="font-bold">Made by <a href="https://gsyan888.blogspot.com/" target="_blank" class="text-kids-blue underline">阿剛老師</a></div>
+    <!-- 精簡浮動頁尾 (右下角) -->
+    <div class="fixed bottom-4 right-4 z-40 theme-card !bg-opacity-90 backdrop-blur-sm p-3 text-xs flex flex-col items-end space-y-1 transition hover:opacity-100 opacity-80 group">
+        <div class="font-bold flex items-center">
+            Made by <a href="https://gsyan888.blogspot.com/" target="_blank" class="text-kids-blue hover:text-blue-600 transition ml-1 underline decoration-2 decoration-kids-yellow">阿剛老師</a>
+        </div>
+        <div class="flex items-center space-x-1">
+            <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" class="flex items-center hover:text-kids-blue transition" title="創用 CC 姓名標示-非商業性-相同方式分享 4.0 國際 授權條款">
+                <i class="fa-brands fa-creative-commons text-base"></i>
+                <i class="fa-brands fa-creative-commons-by text-base ml-0.5"></i>
+                <i class="fa-brands fa-creative-commons-nc text-base ml-0.5"></i>
+                <i class="fa-brands fa-creative-commons-sa text-base ml-0.5"></i>
+                <span class="ml-1 font-mono text-[10px]">CC BY-NC-SA 4.0</span>
+            </a>
+        </div>
+        <div class="text-[10px] opacity-60 text-right max-w-[150px] leading-tight">
+            歡迎非商業轉載，請註明出處
+        </div>
     </div>
 
-    <!-- Gallery Modal -->
-    <div id="gallery-modal" class="hidden fixed inset-0 z-[60] bg-black bg-opacity-95 flex flex-col">
+    <!-- 相片瀏覽 Modal -->
+    <div id="gallery-modal" class="fixed inset-0 bg-black bg-opacity-95 z-[60] hidden flex flex-col">
         <!-- Header -->
         <div class="flex justify-between items-center p-3 text-white shrink-0 bg-gradient-to-b from-gray-900 to-transparent z-10">
             <h3 id="gallery-title" class="text-xl font-bold truncate">相簿名稱</h3>
             <div class="flex items-center space-x-2 md:space-x-3">
-                <button onclick="startPresentationMode(false)" class="flex items-center space-x-1 bg-indigo-600 hover:bg-indigo-500 text-white text-xs md:text-sm px-3 py-2 rounded-full transition shadow-lg border border-indigo-400" title="全螢幕簡報/畫筆">
+                <button onclick="startPresentationMode(false)" class="flex items-center space-x-1 bg-indigo-600 hover:bg-indigo-500 text-white text-sm px-3 py-2 rounded-full transition shadow-lg border border-indigo-400" title="全螢幕簡報/畫筆">
                     <i class="fa-solid fa-chalkboard-user"></i>
-                    <span class="hidden md:inline">簡報</span>
+                    <span class="hidden md:inline">簡報模式</span>
                 </button>
-                <button onclick="downloadAlbumZip()" class="flex items-center space-x-1 bg-gray-700 hover:bg-kids-blue text-white text-xs md:text-sm px-3 py-2 rounded-full transition shadow-lg border border-gray-600" title="打包下載">
+                <button onclick="downloadAlbumZip()" class="flex items-center space-x-1 bg-gray-700 hover:bg-kids-blue text-white text-sm px-3 py-2 rounded-full transition shadow-lg border border-gray-600" title="打包下載">
                     <i class="fa-solid fa-download"></i>
-                    <span class="hidden md:inline">下載</span>
+                    <span class="hidden md:inline">打包下載</span>
                 </button>
-                <button onclick="startPresentationMode(true)" class="flex items-center space-x-1 bg-gray-700 hover:bg-kids-yellow hover:text-gray-900 text-white text-xs md:text-sm px-3 py-2 rounded-full transition shadow-lg border border-gray-600" title="全螢幕自動播放">
+                <button onclick="startPresentationMode(true)" class="flex items-center space-x-1 bg-gray-700 hover:bg-kids-yellow hover:text-gray-900 text-white text-sm px-3 py-2 rounded-full transition shadow-lg border border-gray-600" title="全螢幕自動播放">
                     <i class="fa-solid fa-play"></i>
-                    <span class="hidden md:inline">播放</span>
+                    <span class="hidden md:inline">自動播放</span>
                 </button>
-                <button onclick="closeGallery()" class="bg-gray-700 hover:bg-kids-red w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center transition border border-gray-600">
+                <button onclick="closeGallery()" class="bg-gray-700 hover:bg-kids-red w-10 h-10 rounded-full flex items-center justify-center transition border border-gray-600">
                     <i class="fa-solid fa-xmark text-xl"></i>
                 </button>
             </div>
         </div>
 
-        <!-- Main View -->
-        <div class="flex-1 flex items-center justify-center relative bg-black overflow-hidden group">
-            <button onclick="prevPhoto()" class="absolute left-2 md:left-4 z-20 text-white text-2xl md:text-4xl opacity-50 group-hover:opacity-100 transition bg-black bg-opacity-40 hover:bg-opacity-70 rounded-full w-10 h-10 md:w-14 md:h-14 flex items-center justify-center focus:outline-none">❮</button>
-            <div id="main-view" class="w-full h-full flex items-center justify-center p-2"></div>
-            <button onclick="nextPhoto()" class="absolute right-2 md:right-4 z-20 text-white text-2xl md:text-4xl opacity-50 group-hover:opacity-100 transition bg-black bg-opacity-40 hover:bg-opacity-70 rounded-full w-10 h-10 md:w-14 md:h-14 flex items-center justify-center focus:outline-none">❯</button>
+        <!-- Main View Area -->
+        <div class="flex-1 flex items-center justify-center overflow-hidden relative group w-full bg-black">
+             <button onclick="prevPhoto()" class="absolute left-2 md:left-4 z-20 text-white text-2xl md:text-4xl opacity-50 group-hover:opacity-100 transition bg-black bg-opacity-40 hover:bg-opacity-70 rounded-full w-10 h-10 md:w-14 md:h-14 flex items-center justify-center focus:outline-none">❮</button>
+             <button onclick="nextPhoto()" class="absolute right-2 md:right-4 z-20 text-white text-2xl md:text-4xl opacity-50 group-hover:opacity-100 transition bg-black bg-opacity-40 hover:bg-opacity-70 rounded-full w-10 h-10 md:w-14 md:h-14 flex items-center justify-center focus:outline-none">❯</button>
+             
+             <div id="main-view" class="w-full h-full flex items-center justify-center p-2">
+             </div>
         </div>
 
-        <!-- Thumbnail Strip -->
-        <div id="thumbnail-strip" class="h-24 md:h-28 bg-gray-900 shrink-0 flex items-center p-2 space-x-2 overflow-x-auto hide-scrollbar border-t border-gray-800 z-10"></div>
+        <!-- Thumbnails Strip -->
+        <div class="h-24 md:h-28 bg-gray-900 shrink-0 flex items-center p-2 space-x-2 overflow-x-auto hide-scrollbar border-t border-gray-800 z-10" id="thumbnail-strip">
+        </div>
     </div>
-    
-    <!-- Presentation Modal (簡報/播放模式) -->
+
+    <!-- 簡報/自動播放模式 Modal -->
     <div id="presentation-modal" class="fixed inset-0 bg-black z-[100] hidden flex flex-col select-none touch-none">
         <div class="absolute top-0 left-0 right-0 p-4 z-[130] flex justify-between items-start opacity-0 hover:opacity-100 transition-opacity duration-300">
-            <div id="presentation-status" class="bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm backdrop-blur-sm shadow-sm border border-gray-600">簡報模式</div>
-            <button onclick="closePresentationMode()" class="bg-red-500 hover:bg-red-600 text-white rounded-full w-10 h-10 flex items-center justify-center shadow-lg border-2 border-white text-lg transition transform hover:scale-110"><i class="fa-solid fa-xmark"></i></button>
+            <div id="presentation-status" class="bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm backdrop-blur-sm shadow-sm border border-gray-600">
+                簡報模式
+            </div>
+            <button onclick="closePresentationMode()" class="bg-red-500 hover:bg-red-600 text-white rounded-full w-10 h-10 flex items-center justify-center shadow-lg border-2 border-white text-lg transition transform hover:scale-110" title="退出全螢幕 (Esc)">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
         </div>
+
         <div id="slide-stage" class="slide-stage relative w-full h-full cursor-none">
             <canvas id="drawing-canvas" class="absolute inset-0 cursor-crosshair z-[110]"></canvas>
         </div>
-        <div onclick="prevSlide()" class="absolute left-0 top-0 bottom-0 w-1/6 z-[120] hover:bg-gradient-to-r from-black/30 to-transparent flex items-center justify-start pl-4 opacity-0 hover:opacity-100 cursor-pointer transition"><i class="fa-solid fa-chevron-left text-white text-4xl shadow-sm"></i></div>
-        <div onclick="nextSlide()" class="absolute right-0 top-0 bottom-0 w-1/6 z-[120] hover:bg-gradient-to-l from-black/30 to-transparent flex items-center justify-end pr-4 opacity-0 hover:opacity-100 cursor-pointer transition"><i class="fa-solid fa-chevron-right text-white text-4xl shadow-sm"></i></div>
-        
+
+        <div onclick="prevSlide()" class="absolute left-0 top-0 bottom-0 w-1/6 z-[120] hover:bg-gradient-to-r from-black/30 to-transparent flex items-center justify-start pl-4 opacity-0 hover:opacity-100 cursor-pointer transition">
+             <i class="fa-solid fa-chevron-left text-white text-4xl shadow-sm"></i>
+        </div>
+        <div onclick="nextSlide()" class="absolute right-0 top-0 bottom-0 w-1/6 z-[120] hover:bg-gradient-to-l from-black/30 to-transparent flex items-center justify-end pr-4 opacity-0 hover:opacity-100 cursor-pointer transition">
+             <i class="fa-solid fa-chevron-right text-white text-4xl shadow-sm"></i>
+        </div>
+
         <div id="drawing-toolbar" class="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-gray-900 bg-opacity-90 backdrop-blur-sm rounded-full p-2 flex items-center space-x-2 z-[130] shadow-2xl border border-gray-600 transition-all duration-300">
             <div id="drawing-tools" class="flex items-center space-x-3 px-2 overflow-hidden transition-all duration-300 origin-left">
-                <button id="btn-toggle-play" onclick="togglePresentationAutoPlay()" class="text-white hover:text-kids-yellow w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-800 transition"><i class="fa-solid fa-play"></i></button>
+                <button id="btn-toggle-play" onclick="togglePresentationAutoPlay()" class="text-white hover:text-kids-yellow w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-800 transition" title="播放/暫停">
+                    <i class="fa-solid fa-play"></i>
+                </button>
                 <div class="w-px h-6 bg-gray-600 mx-1"></div>
-                <button class="w-8 h-8 rounded-full bg-red-500 border-2 border-white shadow-md transform hover:scale-110 active:scale-95 transition" onclick="setPenColor('#ef4444')"></button>
-                <button class="w-8 h-8 rounded-full bg-yellow-400 border-2 border-transparent hover:border-white shadow-md transform hover:scale-110 active:scale-95 transition" onclick="setPenColor('#facc15')"></button>
-                <button class="w-8 h-8 rounded-full bg-blue-500 border-2 border-transparent hover:border-white shadow-md transform hover:scale-110 active:scale-95 transition" onclick="setPenColor('#3b82f6')"></button>
-                <button class="w-8 h-8 rounded-full bg-white border-2 border-transparent hover:border-gray-300 shadow-md transform hover:scale-110 active:scale-95 transition" onclick="setPenColor('#ffffff')"></button>
+                <button class="w-8 h-8 rounded-full bg-red-500 border-2 border-white shadow-md transform hover:scale-110 active:scale-95 transition" onclick="setPenColor('#ef4444')" title="紅筆"></button>
+                <button class="w-8 h-8 rounded-full bg-yellow-400 border-2 border-transparent hover:border-white shadow-md transform hover:scale-110 active:scale-95 transition" onclick="setPenColor('#facc15')" title="黃筆"></button>
+                <button class="w-8 h-8 rounded-full bg-blue-500 border-2 border-transparent hover:border-white shadow-md transform hover:scale-110 active:scale-95 transition" onclick="setPenColor('#3b82f6')" title="藍筆"></button>
+                <button class="w-8 h-8 rounded-full bg-white border-2 border-transparent hover:border-gray-300 shadow-md transform hover:scale-110 active:scale-95 transition" onclick="setPenColor('#ffffff')" title="白筆"></button>
                 <div class="w-px h-6 bg-gray-600 mx-1"></div>
-                <button onclick="clearCanvas()" class="text-gray-300 hover:text-red-400 w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-800 transition"><i class="fa-solid fa-eraser"></i></button>
+                <button onclick="clearCanvas()" class="text-gray-300 hover:text-red-400 w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-800 transition" title="清除畫布">
+                    <i class="fa-solid fa-eraser"></i>
+                </button>
             </div>
-            <button onclick="toggleToolbar()" class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 text-white border border-gray-600 shadow-md transition"><i id="toolbar-icon" class="fa-solid fa-chevron-right"></i></button>
+            <button onclick="toggleToolbar()" class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 text-white border border-gray-600 shadow-md transition">
+                <i id="toolbar-icon" class="fa-solid fa-chevron-right"></i>
+            </button>
         </div>
     </div>
 
-    <div id="fullscreen-modal" class="hidden fixed inset-0 bg-black z-[90] flex items-center justify-center" onclick="closeFullscreen()">
-        <img id="fullscreen-image" class="max-w-full max-h-full object-contain">
+    <!-- 全螢幕瀏覽 Modal -->
+    <div id="fullscreen-modal" class="fixed inset-0 bg-black z-[90] hidden flex items-center justify-center cursor-zoom-out" onclick="closeFullscreen()">
+        <img id="fullscreen-image" src="" class="max-w-full max-h-full object-contain" alt="Full Screen View">
+        <button class="absolute top-4 right-4 text-white text-4xl opacity-70 hover:opacity-100 p-2">&times;</button>
     </div>
+
+    <!-- Widget 容器 -->
+    <div id="widget-container" class="hidden w-full h-full p-2"></div>
 
     <!-- 設定 Modal -->
     <div id="settings-modal" class="fixed inset-0 bg-black bg-opacity-50 z-[70] hidden flex items-center justify-center p-4">
-        <div class="theme-card max-w-md w-full p-6 relative border-4 border-kids-blue max-h-[90vh] overflow-y-auto">
-            <button onclick="closeSettings()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-2xl"></i></button>
-            <h2 class="text-2xl font-bold text-kids-blue mb-4"><i class="fa-solid fa-gear mr-2"></i> 設定</h2>
+        <div class="theme-card max-w-md w-full p-6 relative border-4 border-kids-blue">
+            <button onclick="closeSettings()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                <i class="fa-solid fa-xmark text-2xl"></i>
+            </button>
+            
+            <h2 class="text-2xl font-bold text-kids-blue mb-4 flex items-center">
+                <i class="fa-solid fa-gear mr-2"></i> 系統設定
+            </h2>
+            
             <div class="mb-4">
-                <label class="block text-sm font-bold mb-2 opacity-80">GAS Web App URL</label>
+                <label class="block text-sm font-bold mb-2 opacity-80">GAS Web App URL (Script ID)</label>
                 <div class="relative">
-                    <input type="password" id="gas-url-input" class="shadow appearance-none border rounded-xl w-full py-3 px-4 focus:outline-none focus:ring-2 focus:ring-kids-blue bg-transparent" placeholder="https://script.google.com/...">
-                    <button onclick="toggleVisibility()" class="absolute right-3 top-3 text-gray-400"><i class="fa-solid fa-eye"></i></button>
+                    <input type="password" id="gas-url-input" class="shadow appearance-none border rounded-xl w-full py-3 px-4 leading-tight focus:outline-none focus:ring-2 focus:ring-kids-blue bg-transparent" placeholder="請貼上 https://script.google.com/...">
+                    <button onclick="toggleVisibility()" class="absolute right-3 top-3 text-gray-400 hover:text-gray-600">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
                 </div>
             </div>
+
             <div class="mb-6">
-                <label class="block text-sm font-bold mb-2 opacity-80">網頁標題</label>
-                <input type="text" id="app-title-input" class="shadow appearance-none border rounded-xl w-full py-3 px-4 bg-transparent">
+                <label class="block text-sm font-bold mb-2 opacity-80">網頁標題 (App Title)</label>
+                <input type="text" id="app-title-input" class="shadow appearance-none border rounded-xl w-full py-3 px-4 leading-tight focus:outline-none focus:ring-2 focus:ring-kids-blue bg-transparent">
             </div>
-            <div class="mb-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-xl border border-gray-200 dark:border-gray-600">
+
+            <div class="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-xl border border-gray-200 dark:border-gray-600">
                 <h3 class="font-bold mb-2 opacity-80">📤 分享 / 嵌入</h3>
                 <div class="flex space-x-2 mb-3">
                     <button onclick="generateShareLink()" class="flex-1 bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-2 rounded-lg text-sm transition"><i class="fa-solid fa-link mr-1"></i> 分享連結</button>
@@ -282,33 +435,72 @@
                     <p class="text-[10px] text-gray-500">提示：顯示兩排相簿，建議嵌入高度設為 540px。</p>
                 </div>
             </div>
-            <div class="flex justify-between items-center mt-6">
-                <button onclick="resetSettings()" class="text-red-500 text-sm font-bold"><i class="fa-solid fa-trash-can"></i> 清除</button>
-                <button onclick="saveSettings()" class="bg-kids-blue hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-full shadow-lg">儲存並連線</button>
+
+            <div class="flex justify-between items-center">
+                <button onclick="resetSettings()" class="text-red-500 hover:text-red-700 font-bold py-2 px-4 rounded transition">
+                    <i class="fa-solid fa-trash-can mr-1"></i> 清除設定
+                </button>
+                <button onclick="saveSettings()" class="bg-kids-blue hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-full shadow-lg transition transform hover:scale-105">
+                    儲存並連線
+                </button>
             </div>
         </div>
     </div>
 
+    <!-- 上傳 Modal -->
+    <div id="upload-modal" class="fixed inset-0 bg-black bg-opacity-50 z-[70] hidden flex items-center justify-center p-4">
+        <div class="theme-card max-w-md w-full p-6 relative border-4 border-kids-green">
+             <button onclick="closeUploadModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-2xl"></i></button>
+             <h2 class="text-2xl font-bold text-kids-green mb-4"><i class="fa-solid fa-cloud-arrow-up mr-2"></i> 上傳新照片</h2>
+             <div class="mb-4">
+                 <label class="block text-sm font-bold mb-2 opacity-80">相簿名稱</label>
+                 <input type="text" id="upload-album-name" list="album-options" class="shadow border rounded-xl w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-kids-green bg-transparent">
+                 <datalist id="album-options"></datalist>
+             </div>
+             <div class="mb-4">
+                 <label class="block text-sm font-bold mb-2 opacity-80">選擇圖片</label>
+                 <input type="file" id="file-input" accept="image/*" class="w-full text-sm opacity-60 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-kids-green file:text-white hover:file:bg-green-600"/>
+             </div>
+             <canvas id="compress-canvas" style="display:none;"></canvas>
+             <button onclick="processAndUpload()" id="upload-btn" class="w-full bg-kids-green hover:bg-green-600 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition">開始上傳</button>
+        </div>
+    </div>
+
+    <!-- 說明 Modal -->
     <div id="help-modal" class="fixed inset-0 bg-black bg-opacity-50 z-[80] hidden flex items-center justify-center p-4">
         <div class="theme-card max-w-2xl w-full p-6 relative border-4 border-kids-red h-[80vh] flex flex-col">
-            <button onclick="closeHelp()" class="absolute top-4 right-4 text-2xl">&times;</button>
-            <h2 class="text-2xl font-bold text-kids-red mb-4">使用說明</h2>
-            <div class="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-800 p-4 rounded-xl text-sm">
-                 <p class="mb-2">請參照原始碼或 Github 說明部署 GAS。</p>
-                 <div class="flex justify-between items-end mb-2">
-                    <h3 class="font-bold">GAS 程式碼</h3>
-                    <button onclick="copyCode()" class="bg-gray-700 text-white text-xs py-1 px-3 rounded">複製程式碼</button>
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-kids-red"><i class="fa-solid fa-book-open mr-2"></i> 使用說明與程式碼</h2>
+                <button onclick="closeHelp()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+            </div>
+            <div class="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 text-sm">
+                <h3 class="font-bold text-lg mb-2">1. 部署步驟</h3>
+                <ul class="list-disc list-inside mb-4 space-y-1 text-gray-600 dark:text-gray-300">
+                    <li>建立一個新的 Google Sheet。</li>
+                    <li class="font-bold text-red-500">重要：請將試算表所在的 Google Drive 資料夾設定共用，權限設為「知道連結的任何人」皆可「檢視」。</li>
+                    <li>點擊「擴充功能」 > 「Apps Script」。</li>
+                    <li>將下方程式碼完全覆蓋到編輯器中。</li>
+                    <li>點擊「部署」 > 「新增部署」 > 類型選「網頁應用程式」。</li>
+                    <li><b>誰可以存取：務必選擇「任何人」</b>。</li>
+                    <li>複製得到的網址，貼到本網頁的設定中。</li>
+                </ul>
+                <div class="flex justify-between items-end mb-2">
+                    <h3 class="font-bold text-lg">2. GAS 程式碼</h3>
+                    <button onclick="copyCode()" class="bg-gray-700 hover:bg-gray-900 text-white text-xs py-1 px-3 rounded flex items-center"><i class="fa-solid fa-copy mr-1"></i> 複製程式碼</button>
                 </div>
                 <pre id="code-block" class="bg-gray-800 text-green-400 p-4 rounded-lg overflow-x-auto text-xs font-mono"></pre>
             </div>
         </div>
     </div>
 
+    <!-- JavaScript 邏輯 -->
     <script>
-        // IndexedDB & Init
-        let dbName = 'HappySchoolDB'; 
+        // --- IndexedDB Helper ---
+        // 解決 localStorage 容量限制 (5MB)，IndexedDB 可支援數 GB
+        let dbName = 'HappySchoolDB';
         const storeName = 'albumsStore';
         let dbPromise = null;
+
         function initDB(suffix = '') {
             if (suffix) { const shortId = suffix.length > 10 ? suffix.slice(-10) : suffix; dbName = `HappySchoolDB_${shortId}`; }
             dbPromise = new Promise((resolve, reject) => {
@@ -318,32 +510,243 @@
                 request.onerror = (e) => reject(e.target.error);
             });
         }
+
         const idb = {
             async get(key) { if(!dbPromise) initDB(); try { const db = await dbPromise; return new Promise((resolve, reject) => { const tx = db.transaction(storeName, 'readonly'); const req = tx.objectStore(storeName).get(key); req.onsuccess = () => resolve(req.result); req.onerror = () => reject(req.error); }); } catch(e){ return null; } },
             async set(key, val) { if(!dbPromise) initDB(); try { const db = await dbPromise; const tx = db.transaction(storeName, 'readwrite'); tx.objectStore(storeName).put(val, key); } catch(e){} },
             async clear() { if(!dbPromise) initDB(); try { const db = await dbPromise; const tx = db.transaction(storeName, 'readwrite'); tx.objectStore(storeName).clear(); } catch(e){} }
         };
 
+        // --- 全域變數 ---
         let gasUrl = localStorage.getItem('gas_app_url') || "";
         let appTitle = localStorage.getItem('app_title') || "快樂小學堂相簿";
-        let albumsData = [];
+        let albumsData = []; // 原始資料
         let currentAlbumPhotos = [];
         let currentPhotoIndex = 0;
+        
+        // 搜尋與排序變數
         let searchKeyword = "";
-        let currentSortMode = "default";
+        let currentSortMode = "default"; // default, name, count
+        
+        // Gallery 自動播放
+        let playInterval = null;
+
+        // 簡報模式變數
+        let isDrawing = false;
+        let presentationCtx = null;
+        let currentPenColor = '#ef4444'; 
+        let isToolbarExpanded = true;
+        let isPresentationPlaying = false; // 簡報模式下的自動播放狀態
+        let presentationTimer = null;
+        
+        // Widget 模式變數
         let isWidgetMode = false;
         let widgetLimit = 16; 
         let isStandaloneMode = false;
-        const gasCodeString = `(請貼上您的 GAS 程式碼)`; 
 
-        // Helper functions
-        function compressAlbums(albums) { return albums.map(album => ({ i: album.id, n: album.name, c: album.cover, p: album.photos.map(p => ({ i: p.id, n: p.name, t: p.type })) })); }
-        function decompressAlbums(minified) { if(!minified) return []; if(minified.length>0 && minified[0].photos) return minified; return minified.map(a => ({ id: a.i, name: a.n, cover: a.c, photos: a.p.map(p => ({ id: p.i, name: p.n, type: p.t, url: `https://lh3.googleusercontent.com/d/${p.i}=s800`, downloadUrl: `https://drive.google.com/uc?export=download&id=${p.i}` })) })); }
+        // GAS Code String (優化版：修復服務錯誤)
+        const gasCodeString = `/**
+ * 快樂小學堂・雲端相簿 - 後端 API (優化版)
+ */
+
+const DB_SHEET_NAME = "相片上傳紀錄";
+const DB_HEADERS = ["時間戳記", "相簿名稱 (資料夾)", "檔案名稱", "檔案類型", "檔案 ID", "預覽連結"];
+
+function doGet(e) {
+  const params = e.parameter;
+  const action = params.action;
+  let result = {};
+
+  try {
+    if (action === "getAlbums") {
+      result = getAlbumData();
+    } else if (action === "shortenUrl") {
+      result = proxyShortenUrl(params.longUrl);
+    } else {
+      result = { status: "error", message: "未知的請求動作" };
+    }
+  } catch (err) {
+    result = { status: "error", message: err.toString() };
+  }
+
+  return ContentService.createTextOutput(JSON.stringify(result))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  let result = {};
+  try {
+    initDatabase();
+    const postData = JSON.parse(e.postData.contents);
+    const albumName = postData.albumName; 
+    const fileName = postData.fileName;
+    const base64Data = postData.image;
+
+    const rootFolder = getRootFolder();
+    let albumFolder;
+    const folders = rootFolder.getFoldersByName(albumName);
+    if (folders.hasNext()) {
+      albumFolder = folders.next();
+    } else {
+      albumFolder = rootFolder.createFolder(albumName);
+    }
+
+    const contentType = base64Data.substring(5, base64Data.indexOf(';'));
+    const bytes = Utilities.base64Decode(base64Data.substring(base64Data.indexOf(',') + 1));
+    const blob = Utilities.newBlob(bytes, contentType, fileName);
+    const file = albumFolder.createFile(blob);
+    
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName(DB_SHEET_NAME);
+    // 使用建構的 URL
+    const fileUrl = "https://lh3.googleusercontent.com/d/" + file.getId() + "=s800";
+
+    sheet.appendRow([new Date(), albumName, fileName, contentType, file.getId(), fileUrl]);
+    result = { status: "success", message: "上傳成功", fileUrl: fileUrl };
+  } catch (err) {
+    result = { status: "error", message: err.toString() };
+  }
+  return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+}
+
+function getAlbumData() {
+  const rootFolder = getRootFolder();
+  const albums = [];
+  const subFolders = rootFolder.getFolders();
+  
+  while (subFolders.hasNext()) {
+    const folder = subFolders.next();
+    const folderName = folder.getName();
+    const folderId = folder.getId();
+    const photos = [];
+    
+    try {
+        const files = folder.getFiles();
+        while (files.hasNext()) {
+          const file = files.next();
+          const mimeType = file.getMimeType();
+          
+          if (mimeType.startsWith('image/') || mimeType.startsWith('video/')) {
+            // 優化：手動建構預覽與下載 URL，避免呼叫 Drive API 導致配額錯誤
+            const fileId = file.getId();
+            const url = "https://lh3.googleusercontent.com/d/" + fileId + "=s800";
+            // 關鍵修改：手動組合下載連結，取代 file.getDownloadUrl()
+            const downloadUrl = "https://drive.google.com/uc?export=download&id=" + fileId;
+
+            photos.push({
+              id: fileId,
+              name: file.getName(),
+              type: mimeType,
+              url: url, 
+              downloadUrl: downloadUrl 
+            });
+          }
+        }
+    } catch (e) {
+        console.error("Error reading folder: " + folderName, e);
+        // 忽略單一資料夾錯誤，繼續讀取其他資料夾
+    }
+    
+    if (photos.length > 0) {
+      albums.push({
+        id: folderId,
+        name: folderName,
+        cover: photos[0].url,
+        photos: photos
+      });
+    }
+  }
+  return { status: "success", data: albums };
+}
+
+function getRootFolder() {
+  const ssId = SpreadsheetApp.getActiveSpreadsheet().getId();
+  const file = DriveApp.getFileById(ssId);
+  const parents = file.getParents();
+  if (parents.hasNext()) {
+    return parents.next();
+  } else {
+    throw new Error("找不到試算表所在的父資料夾");
+  }
+}
+
+function initDatabase() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(DB_SHEET_NAME);
+  if (!sheet) {
+    sheet = ss.insertSheet(DB_SHEET_NAME);
+    sheet.appendRow(DB_HEADERS);
+  }
+}
+
+function proxyShortenUrl(longUrl) {
+  if (!longUrl) return { status: "error", message: "無效的網址" };
+  const apiUrl = \`https://is.gd/create.php?format=json&url=\${encodeURIComponent(longUrl)}\`;
+  try {
+    const response = UrlFetchApp.fetch(apiUrl, { muteHttpExceptions: true });
+    const json = JSON.parse(response.getContentText());
+    if (json.shorturl) {
+      return { status: "success", shortUrl: json.shorturl };
+    } else {
+      return { status: "error", message: "縮網址失敗", details: json };
+    }
+  } catch (e) {
+    return { status: "error", message: "API 連線失敗", error: e.toString() };
+  }
+}`; 
+
+        // --- Data Compression Helpers ---
+        // 壓縮：移除重複的 URL 字串，只保留 ID 和必要欄位
+        function compressAlbums(albums) {
+            return albums.map(album => ({
+                i: album.id,
+                n: album.name,
+                c: album.cover, // 保留封面圖完整 URL (因為可能不是第一張圖)
+                p: album.photos.map(p => ({
+                    i: p.id,
+                    n: p.name,
+                    t: p.type
+                    // 移除 url 和 downloadUrl，這佔了絕大部分空間
+                }))
+            }));
+        }
+
+        // 解壓縮：根據 ID 重建完整的 URL
+        function decompressAlbums(minified) {
+            if (!minified || !Array.isArray(minified)) return [];
+            // 簡單檢查是否為舊版資料 (若第一筆資料有 photos 屬性則為舊版)
+            if (minified.length > 0 && minified[0].photos) {
+                return minified; // 舊版資料直接回傳
+            }
+
+            return minified.map(a => ({
+                id: a.i,
+                name: a.n,
+                cover: a.c,
+                photos: a.p.map(p => ({
+                    id: p.i,
+                    name: p.n,
+                    type: p.t,
+                    url: `https://lh3.googleusercontent.com/d/${p.i}=s800`,
+                    downloadUrl: `https://drive.google.com/uc?export=download&id=${p.i}`
+                }))
+            }));
+        }
+        
         function getScriptId(url) { if (!url) return ''; const match = url.match(/\/s\/([a-zA-Z0-9-_]+)\//); return match ? match[1] : ''; }
 
-        // Window Load
+        // --- 初始化 ---
         window.onload = async function() {
+            // 載入主題
+            const savedTheme = localStorage.getItem('app_theme') || 'kids';
+            switchTheme(savedTheme);
+
+            document.getElementById('code-block').innerText = gasCodeString;
             const urlParams = new URLSearchParams(window.location.search);
+            
+            // 1. 偵測 Widget 模式
             if (urlParams.get('mode') === 'widget') {
                 isWidgetMode = true;
                 document.body.classList.add('widget-mode');
@@ -354,149 +757,415 @@
                 // 修改小工具模式的載入文字
                 container.innerHTML = `<div class="w-full h-full flex flex-col justify-center items-center"><div class="loader mb-2"></div><div class="text-gray-500 font-bold text-sm bg-white/80 px-3 py-1 rounded-full backdrop-blur-sm shadow-sm mb-1">相簿讀取中...</div><div class="text-gray-600 text-xs bg-white/80 px-2 py-0.5 rounded backdrop-blur-sm font-bold">第一次整理相簿比較慢，我正在翻箱倒櫃中，請稍候！</div></div>`;
             }
+            
+            const paramTitle = urlParams.get('title');
             const config = urlParams.get('config');
+            
+            if (paramTitle) {
+                appTitle = decodeURIComponent(paramTitle);
+                // 只有沒帶參數時才依賴 LocalStorage
+                if(!config) localStorage.setItem('app_title', appTitle);
+            } else if (!config) {
+                appTitle = localStorage.getItem('app_title') || "快樂小學堂相簿";
+            }
+            updateAppTitleUI(appTitle);
+
             if (config) {
                 try {
                     const decodedUrl = atob(config);
                     if (decodedUrl.startsWith('http')) {
                         gasUrl = decodedUrl;
                         isStandaloneMode = true; 
-                        if (!isWidgetMode) Swal.fire({ icon: 'success', title: '已載入指定相簿', text: '使用分享連結模式 (不影響本機其他設定)', timer: 1500, showConfirmButton: false });
+                        
+                        // 只有在非 Widget 模式且使用者明確想儲存時才更新 LocalStorage
+                        // 這裡為了防止干擾，如果有 config，我們就不自動更新 LocalStorage 的 global key
+                        if (!isWidgetMode) {
+                            Swal.fire({ icon: 'success', title: '已載入指定相簿', text: '使用分享連結模式 (不影響本機其他設定)', timer: 1500, showConfirmButton: false });
+                        }
                     }
-                } catch (e) { console.error(e); }
+                } catch (e) { console.error("Config decode failed", e); }
             } else {
                 gasUrl = localStorage.getItem('gas_app_url') || "";
             }
 
-            const savedTheme = localStorage.getItem('app_theme') || 'kids';
-            switchTheme(savedTheme);
-            document.getElementById('code-block').innerText = gasCodeString;
-            
-            const paramTitle = urlParams.get('title');
-            if (paramTitle) { appTitle = decodeURIComponent(paramTitle); if(!config) localStorage.setItem('app_title', appTitle); } else if (!config) { appTitle = localStorage.getItem('app_title') || "快樂小學堂相簿"; }
-            updateAppTitleUI(appTitle);
-            
             document.getElementById('app-title-input').value = appTitle;
-            if (gasUrl) document.getElementById('gas-url-input').value = gasUrl;
-
-            const scriptId = getScriptId(gasUrl);
-            initDB(scriptId);
-            initPresentationCanvas(); // Init canvas
-
+            
+            // --- 核心修改：本地快取優先邏輯 (讀取 IndexedDB) ---
             if (gasUrl) {
-                const cachedData = await idb.get('cached_albums_min_v1');
+                document.getElementById('gas-url-input').value = gasUrl;
+                const scriptId = getScriptId(gasUrl);
+                initDB(scriptId); // 這裡會建立 HappySchoolDB_XXXXXX
+                
+                // 嘗試讀取本地快取
+                const cachedData = await idb.get('cached_albums_min_v1'); // 使用新 Key
                 if (cachedData) {
+                    console.log("Loading from IndexedDB cache...");
                     try {
-                        const minified = (typeof cachedData === 'string') ? JSON.parse(cachedData) : cachedData;
-                        albumsData = decompressAlbums(minified);
-                        if (isWidgetMode) renderWidget(albumsData); else { renderAlbums(albumsData); document.getElementById('control-bar').classList.remove('hidden'); }
+                        // 如果存入的是字串則需要 parse，如果是物件則直接使用
+                        const minifiedData = (typeof cachedData === 'string') ? JSON.parse(cachedData) : cachedData;
+                        albumsData = decompressAlbums(minifiedData);
+                        
+                        if (isWidgetMode) {
+                            renderWidget(albumsData);
+                        } else {
+                            renderAlbums(albumsData);
+                            document.getElementById('control-bar').classList.remove('hidden');
+                        }
+                        updateUploadOptions(albumsData);
                         document.getElementById('loading').classList.add('hidden'); 
-                    } catch (e) { fetchAlbums(); }
-                } else fetchAlbums();
-            } else if (!isWidgetMode) document.getElementById('empty-state').classList.remove('hidden');
+                    } catch (e) {
+                        console.error("Cache corrupted, fetching fresh data...", e);
+                        fetchAlbums(); 
+                    }
+                } else {
+                    fetchAlbums();
+                }
+            } else if (!isWidgetMode) {
+                document.getElementById('empty-state').classList.remove('hidden');
+            }
+            
+            initPresentationCanvas();
+
+            // 點擊外部關閉主題選單
+            document.addEventListener('click', function(e) {
+                const menu = document.getElementById('theme-menu');
+                const btn = e.target.closest('button[title="切換風格"]');
+                if (!menu.classList.contains('hidden') && !btn && !menu.contains(e.target)) {
+                    menu.classList.add('hidden');
+                }
+            });
         };
 
-        // Fetch
-        async function fetchAlbums() {
+        // --- 主題切換邏輯 ---
+        function toggleThemeMenu() {
+            document.getElementById('theme-menu').classList.toggle('hidden');
+        }
+
+        function switchTheme(themeName) {
+            document.documentElement.setAttribute('data-theme', themeName);
+            localStorage.setItem('app_theme', themeName);
+            
+            // 如果是 Modern 主題，切換 Tailwind 的 Dark Mode
+            if (themeName === 'modern') {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+            
+            // 隱藏選單
+            document.getElementById('theme-menu').classList.add('hidden');
+        }
+
+        function updateAppTitleUI(title) {
+            document.title = title + " 📸";
+            document.getElementById('app-header-title').innerText = title;
+        }
+
+        async function fetchAlbums(isSync = false) {
             const loading = document.getElementById('loading');
-            if (!isWidgetMode) loading.classList.remove('hidden');
+            const emptyState = document.getElementById('empty-state');
+            const albumGrid = document.getElementById('album-grid');
+            const controlBar = document.getElementById('control-bar');
+            
+            if (!isSync && !isWidgetMode && albumsData.length === 0) {
+                loading.classList.remove('hidden');
+                emptyState.classList.add('hidden');
+                controlBar.classList.add('hidden'); 
+                albumGrid.innerHTML = ''; 
+            } else if (isWidgetMode && albumsData.length === 0) {
+                 // widget mode loading is handled in html structure or already present
+            }
+
             try {
                 const response = await fetch(`${gasUrl}?action=getAlbums`);
                 const json = await response.json();
                 if (json.status === 'success') {
-                    albumsData = json.data;
-                    const minified = compressAlbums(albumsData);
-                    await idb.set('cached_albums_min_v1', minified);
-                    if (isWidgetMode) renderWidget(albumsData); else { renderAlbums(albumsData); document.getElementById('control-bar').classList.remove('hidden'); document.getElementById('empty-state').classList.add('hidden'); }
+                    const freshData = json.data;
+                    
+                    if (isSync) {
+                        return freshData;
+                    }
+
+                    // 一般載入模式
+                    albumsData = freshData;
+                    // --- 修正：寫入 IndexedDB ---
+                    try {
+                        const minified = compressAlbums(albumsData);
+                        await idb.set('cached_albums_min_v1', minified);
+                    } catch (e) {
+                        console.warn("IndexedDB 寫入失敗", e);
+                    }
+                    // --------------------------
+                    
+                    if (isWidgetMode) {
+                        renderWidget(albumsData);
+                    } else {
+                        controlBar.classList.remove('hidden');
+                        filterAndSortAlbums(); 
+                        updateUploadOptions(albumsData);
+                        document.getElementById('empty-state').classList.add('hidden');
+                    }
+                } else {
+                    throw new Error(json.message || "未知錯誤");
                 }
             } catch (error) {
                 console.error(error);
-                if(isWidgetMode) document.getElementById('widget-container').innerHTML = '<div class="text-white p-4 text-center">無法載入相簿<br>請檢查 GAS 網址</div>';
-            } finally { loading.classList.add('hidden'); }
+                if (isWidgetMode) {
+                     document.getElementById('widget-container').innerHTML = '<div class="text-white p-4 text-center">無法載入相簿<br>請檢查 GAS 網址</div>';
+                } else if (!isSync) {
+                    Swal.fire('讀取失敗', '無法連接到 GAS，請檢查網址或權限設定。', 'error');
+                    emptyState.classList.remove('hidden');
+                } else {
+                    throw error; 
+                }
+            } finally {
+                loading.classList.add('hidden');
+            }
         }
 
-        // Widget Render
+        // --- 同步與比對邏輯 ---
+        async function syncAlbums() {
+            const btn = document.getElementById('btn-sync');
+            const icon = document.getElementById('sync-icon');
+            
+            btn.disabled = true;
+            icon.classList.add('fa-spin');
+            
+            try {
+                const freshData = await fetchAlbums(true); 
+                
+                const oldIds = new Set(albumsData.map(a => a.id));
+                const newIds = new Set(freshData.map(a => a.id));
+                const oldMap = new Map(albumsData.map(a => [a.id, a]));
+                
+                let addedCount = 0;
+                let removedCount = 0;
+                let modifiedCount = 0;
+                
+                freshData.forEach(album => {
+                    if (!oldIds.has(album.id)) {
+                        addedCount++;
+                    } else {
+                        const oldAlbum = oldMap.get(album.id);
+                        if (oldAlbum && oldAlbum.photos.length !== album.photos.length) {
+                            modifiedCount++;
+                        }
+                    }
+                });
+                
+                albumsData.forEach(album => {
+                    if (!newIds.has(album.id)) {
+                        removedCount++;
+                    }
+                });
+                
+                albumsData = freshData;
+                // --- 修正：寫入 IndexedDB ---
+                try {
+                    const minified = compressAlbums(albumsData);
+                    await idb.set('cached_albums_min_v1', minified);
+                } catch (e) {
+                    console.warn("IndexedDB 寫入失敗", e);
+                }
+                // --------------------------
+                
+                filterAndSortAlbums();
+                updateUploadOptions(albumsData);
+                
+                if (addedCount === 0 && removedCount === 0 && modifiedCount === 0) {
+                    Swal.fire({
+                        icon: 'info',
+                        title: '資料已是最新',
+                        text: '雲端相簿沒有變動。',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '同步完成！',
+                        html: `
+                            <ul class="text-left text-sm space-y-1">
+                                <li><span class="text-green-600 font-bold">＋ 新增：</span> ${addedCount} 本相簿</li>
+                                <li><span class="text-blue-600 font-bold">↻ 更新：</span> ${modifiedCount} 本相簿內容</li>
+                                <li><span class="text-red-500 font-bold">－ 移除：</span> ${removedCount} 本相簿</li>
+                            </ul>
+                        `
+                    });
+                }
+
+            } catch (err) {
+                Swal.fire('同步失敗', '無法連線到雲端硬碟', 'error');
+            } finally {
+                btn.disabled = false;
+                icon.classList.remove('fa-spin');
+            }
+        }
+
+        // --- 搜尋與排序邏輯 ---
+        function handleSearch(keyword) {
+            searchKeyword = keyword.toLowerCase();
+            filterAndSortAlbums();
+        }
+
+        function setSortMode(mode) {
+            currentSortMode = mode;
+            document.querySelectorAll('.sort-btn').forEach(btn => btn.classList.remove('sort-btn-active'));
+            document.getElementById(`btn-sort-${mode}`).classList.add('sort-btn-active');
+            filterAndSortAlbums();
+        }
+
+        function filterAndSortAlbums() {
+            let filtered = [...albumsData]; 
+
+            if (searchKeyword) {
+                filtered = filtered.filter(album => album.name.toLowerCase().includes(searchKeyword));
+            }
+
+            if (currentSortMode === 'name') {
+                filtered.sort((a, b) => a.name.localeCompare(b.name, 'zh-Hant'));
+            } else if (currentSortMode === 'count') {
+                filtered.sort((a, b) => b.photos.length - a.photos.length);
+            } 
+
+            renderAlbums(filtered);
+        }
+
+        function renderAlbums(albums) {
+            const grid = document.getElementById('album-grid');
+            grid.innerHTML = ''; 
+            
+            if (albums.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center opacity-60 py-10">
+                    <i class="fa-solid fa-face-sad-tear text-4xl mb-2 opacity-50"></i><br>
+                    找不到符合的相簿...
+                </div>`;
+                return;
+            }
+
+            albums.forEach(album => {
+                const card = document.createElement('div');
+                card.className = "theme-card overflow-hidden card-hover cursor-pointer group border-transparent hover:border-kids-yellow";
+                card.onclick = () => openGallery(album.id);
+                const coverImg = album.cover || 'https://via.placeholder.com/400x300?text=No+Image';
+                card.innerHTML = `
+                    <div class="relative h-48 overflow-hidden bg-gray-200">
+                        <img src="${coverImg}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500" loading="lazy">
+                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition"></div>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="font-bold text-lg truncate" title="${album.name}"><i class="fa-regular fa-folder-open mr-2 text-kids-yellow"></i>${album.name}</h3>
+                        <p class="text-sm opacity-60 mt-1">${album.photos.length} 張照片</p>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+        
+        // --- Widget Render Logic (雙排模式) ---
         function renderWidget(albums) {
             const container = document.getElementById('widget-container');
             container.classList.remove('hidden');
             container.innerHTML = '';
+
             const targetAlbums = albums.slice(0, widgetLimit);
-            if (targetAlbums.length === 0) { container.innerHTML = '<div class="text-center w-full text-gray-500">暫無相簿</div>'; return; }
+
+            if (targetAlbums.length === 0) {
+                container.innerHTML = '<div class="text-center w-full text-gray-500">暫無相簿</div>';
+                return;
+            }
+
             const halfIndex = Math.ceil(targetAlbums.length / 2);
             const row1Albums = targetAlbums.slice(0, halfIndex);
             const row2Albums = targetAlbums.slice(halfIndex);
 
             const createMarqueeRow = (items) => {
                 if (items.length === 0) return null;
+
                 const wrapper = document.createElement('div');
                 wrapper.className = 'marquee-wrapper flex-1 overflow-hidden relative flex items-center bg-white/50 dark:bg-black/50 backdrop-blur-sm rounded-xl mb-2 last:mb-0';
+                
                 const track = document.createElement('div');
                 track.className = 'marquee-track flex w-max animate-marquee';
+                
                 let contentHTML = '';
                 items.forEach(album => {
                     let coverUrl = album.cover || '';
                     if (coverUrl.includes('=s800')) coverUrl = coverUrl.replace('=s800', '=s400');
                     else if (coverUrl.includes('googleusercontent.com')) coverUrl += '=s400';
+
+                    // 關鍵：產生連結時，確保也是使用帶有 config 的完整網址，維持隔離狀態
                     const config = btoa(gasUrl);
                     const fullUrl = `${window.location.pathname}?title=${encodeURIComponent(appTitle)}&config=${config}`;
-                    contentHTML += `<div class="widget-card group" onclick="window.open('${fullUrl}', '_blank')"><div class="relative h-48 overflow-hidden bg-gray-200"><img src="${coverUrl}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500" loading="lazy" alt="${album.name}"><div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition flex items-center justify-center"><i class="fa-solid fa-arrow-up-right-from-square text-white opacity-0 group-hover:opacity-100 text-2xl drop-shadow-md"></i></div><div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2"><h3 class="text-white font-bold text-sm truncate text-shadow">${album.name}</h3><p class="text-gray-200 text-xs">${album.photos.length} 張</p></div></div></div>`;
+                    
+                    contentHTML += `
+                    <div class="widget-card group" onclick="window.open('${fullUrl}', '_blank')">
+                        <div class="relative h-48 overflow-hidden bg-gray-200">
+                            <img src="${coverUrl}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500" loading="lazy" alt="${album.name}">
+                            <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition flex items-center justify-center">
+                                <i class="fa-solid fa-arrow-up-right-from-square text-white opacity-0 group-hover:opacity-100 text-2xl drop-shadow-md"></i>
+                            </div>
+                            <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
+                                 <h3 class="text-white font-bold text-sm truncate text-shadow">${album.name}</h3>
+                                 <p class="text-gray-200 text-xs">${album.photos.length} 張</p>
+                            </div>
+                        </div>
+                    </div>
+                    `;
                 });
+
                 const minItemsForLoop = 6;
                 let loopCount = 1;
                 if (items.length < minItemsForLoop) loopCount = Math.ceil(minItemsForLoop / items.length);
-                let finalHTML = contentHTML; for(let i=0; i<loopCount; i++) finalHTML += contentHTML;
-                track.innerHTML = finalHTML; wrapper.appendChild(track); return wrapper;
+                
+                let finalHTML = contentHTML; 
+                for(let i=0; i<loopCount; i++) finalHTML += contentHTML;
+
+                track.innerHTML = finalHTML;
+                wrapper.appendChild(track);
+                return wrapper;
             };
+
             const mainFlex = document.createElement('div');
             mainFlex.className = 'flex flex-col h-full w-full overflow-hidden';
+
             const row1El = createMarqueeRow(row1Albums);
             const row2El = createMarqueeRow(row2Albums);
-            if (row1El) mainFlex.appendChild(row1El); if (row2El) mainFlex.appendChild(row2El);
+
+            if (row1El) mainFlex.appendChild(row1El);
+            if (row2El) mainFlex.appendChild(row2El);
+
             container.appendChild(mainFlex);
         }
 
-        // Render Albums
-        function renderAlbums(albums) {
-            const grid = document.getElementById('album-grid');
-            grid.innerHTML = ''; 
-            if (albums.length === 0) { grid.innerHTML = `<div class="col-span-full text-center opacity-60 py-10">找不到相簿...</div>`; return; }
-            albums.forEach(album => {
-                const card = document.createElement('div');
-                card.className = "theme-card overflow-hidden card-hover cursor-pointer group border-transparent hover:border-kids-yellow";
-                card.onclick = () => openGallery(album.id);
-                card.innerHTML = `<div class="relative h-48 overflow-hidden bg-gray-200"><img src="${album.cover}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500" loading="lazy"></div><div class="p-4"><h3 class="font-bold text-lg truncate"><i class="fa-regular fa-folder-open mr-2 text-kids-yellow"></i>${album.name}</h3><p class="text-sm opacity-60 mt-1">${album.photos.length} 張照片</p></div>`;
-                grid.appendChild(card);
-            });
-        }
-        function handleSearch(val) { searchKeyword = val.toLowerCase(); filterAndSortAlbums(); }
-        function setSortMode(mode) { currentSortMode = mode; document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('bg-kids-blue', 'text-white')); event.target.classList.add('bg-kids-blue', 'text-white'); filterAndSortAlbums(); }
-        function filterAndSortAlbums() { let filtered = [...albumsData]; if (searchKeyword) filtered = filtered.filter(a => a.name.toLowerCase().includes(searchKeyword)); if (currentSortMode === 'name') filtered.sort((a, b) => a.name.localeCompare(b.name, 'zh-Hant')); else if (currentSortMode === 'count') filtered.sort((a, b) => b.photos.length - a.photos.length); renderAlbums(filtered); }
-
-        // Gallery & Presentation Logic (Restored)
-        function openGallery(id) { 
-            const album = albumsData.find(a => a.id === id);
+        // --- Gallery 一般瀏覽 ---
+        function openGallery(albumId) {
+            const album = albumsData.find(a => a.id === albumId);
             if (!album) return;
-            currentAlbumPhotos = album.photos; currentPhotoIndex = 0;
+            currentAlbumPhotos = album.photos;
+            currentPhotoIndex = 0;
             document.getElementById('gallery-title').innerText = album.name;
-            
-            // Restore Thumbnails
             const thumbStrip = document.getElementById('thumbnail-strip');
             thumbStrip.innerHTML = '';
+
             currentAlbumPhotos.forEach((photo, index) => {
                 const thumb = document.createElement('div');
                 thumb.className = `w-16 h-16 md:w-20 md:h-20 shrink-0 cursor-pointer rounded-lg overflow-hidden opacity-60 hover:opacity-100 transition duration-200 border-2 border-transparent`;
                 thumb.id = `thumb-${index}`;
-                thumb.onclick = () => { currentPhotoIndex = index; updateMainPhoto(); };
-                let imgContent = photo.type.startsWith('video') ? `<div class="w-full h-full bg-gray-800 flex items-center justify-center text-white"><i class="fa-solid fa-video"></i></div>` : `<img src="${photo.url}" class="w-full h-full object-cover">`;
+                thumb.onclick = () => {
+                    currentPhotoIndex = index;
+                    updateMainPhoto();
+                };
+                let imgContent = photo.type.startsWith('video') 
+                    ? `<div class="w-full h-full bg-gray-800 flex items-center justify-center text-white"><i class="fa-solid fa-video"></i></div>` 
+                    : `<img src="${photo.url}" class="w-full h-full object-cover">`;
                 thumb.innerHTML = imgContent;
                 thumbStrip.appendChild(thumb);
             });
-
-            updateMainPhoto(); 
+            updateMainPhoto();
             document.getElementById('gallery-modal').classList.remove('hidden');
         }
-        function closeGallery() { document.getElementById('gallery-modal').classList.add('hidden'); document.getElementById('main-view').innerHTML = ''; stopPresentationTimer(); }
-        
+
         function updateMainPhoto() {
              const photo = currentAlbumPhotos[currentPhotoIndex];
              const mainView = document.getElementById('main-view');
@@ -514,10 +1183,261 @@
              if (activeThumb) { activeThumb.classList.add('thumb-active'); activeThumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); }
         }
 
-        function nextPhoto() { currentPhotoIndex = (currentPhotoIndex+1)%currentAlbumPhotos.length; updateMainPhoto(); }
-        function prevPhoto() { currentPhotoIndex = (currentPhotoIndex-1+currentAlbumPhotos.length)%currentAlbumPhotos.length; updateMainPhoto(); }
+        function nextPhoto() {
+            currentPhotoIndex = (currentPhotoIndex + 1) % currentAlbumPhotos.length;
+            updateMainPhoto();
+        }
+        function prevPhoto() {
+            currentPhotoIndex = (currentPhotoIndex - 1 + currentAlbumPhotos.length) % currentAlbumPhotos.length;
+            updateMainPhoto();
+        }
 
-        // Download Zip (升級版：解決影片下載問題)
+        // --- 全螢幕瀏覽 (Lightbox) ---
+        function openFullscreen(src) {
+            document.getElementById('fullscreen-image').src = src;
+            document.getElementById('fullscreen-modal').classList.remove('hidden');
+        }
+        function closeFullscreen() {
+            document.getElementById('fullscreen-modal').classList.add('hidden');
+        }
+
+        // --- 簡報與自動播放模式 (核心修改) ---
+
+        function startPresentationMode(isAutoPlay = false) {
+            const modal = document.getElementById('presentation-modal');
+            const toolbar = document.getElementById('drawing-toolbar');
+            const statusText = document.getElementById('presentation-status');
+            const stage = document.getElementById('slide-stage');
+            
+            modal.classList.remove('hidden');
+
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen().catch(e => console.log(e));
+            }
+
+            if (isAutoPlay) {
+                toolbar.classList.add('toolbar-hidden');
+                stage.style.cursor = 'none'; 
+                statusText.innerText = "自動播放中 📸";
+            } else {
+                toolbar.classList.remove('toolbar-hidden');
+                stage.style.cursor = 'crosshair'; 
+                statusText.innerText = "簡報模式 ✏️";
+            }
+
+            const images = stage.querySelectorAll('img, video, iframe'); // include iframe
+            images.forEach(img => img.remove());
+            
+            createSlideImage(currentPhotoIndex, 'slide-center');
+            
+            resizePresentationCanvas();
+            window.addEventListener('resize', resizePresentationCanvas);
+            window.addEventListener('keydown', handlePresentationKeydown);
+
+            if (isAutoPlay) {
+                isPresentationPlaying = true;
+                updatePlayButtonIcon();
+                startPresentationTimer();
+            } else {
+                isPresentationPlaying = false;
+                updatePlayButtonIcon();
+                stopPresentationTimer();
+            }
+        }
+
+        function closePresentationMode() {
+            const modal = document.getElementById('presentation-modal');
+            const stage = document.getElementById('slide-stage');
+            modal.classList.add('hidden');
+            stage.style.cursor = ''; 
+            
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            }
+
+            stopPresentationTimer();
+            window.removeEventListener('resize', resizePresentationCanvas);
+            window.removeEventListener('keydown', handlePresentationKeydown);
+            
+            updateMainPhoto();
+        }
+
+        function handlePresentationKeydown(e) {
+            if (e.key === 'ArrowRight') nextSlide();
+            if (e.key === 'ArrowLeft') prevSlide();
+            if (e.key === 'Escape') closePresentationMode();
+            if (e.key === ' ' || e.key === 'Spacebar') togglePresentationAutoPlay();
+        }
+
+        function nextSlide() {
+            const oldIndex = currentPhotoIndex;
+            currentPhotoIndex = (currentPhotoIndex + 1) % currentAlbumPhotos.length;
+            performSlideTransition('next', oldIndex, currentPhotoIndex);
+            
+            if (isPresentationPlaying) {
+                stopPresentationTimer();
+                startPresentationTimer();
+            }
+            clearCanvas();
+        }
+
+        function prevSlide() {
+            const oldIndex = currentPhotoIndex;
+            currentPhotoIndex = (currentPhotoIndex - 1 + currentAlbumPhotos.length) % currentAlbumPhotos.length;
+            performSlideTransition('prev', oldIndex, currentPhotoIndex);
+            
+            if (isPresentationPlaying) {
+                stopPresentationTimer();
+                startPresentationTimer();
+            }
+            clearCanvas();
+        }
+
+        function performSlideTransition(direction, oldIndex, newIndex) {
+            const stage = document.getElementById('slide-stage');
+            const currentImages = stage.querySelectorAll('.slide-image');
+            const oldImg = currentImages.length > 0 ? currentImages[currentImages.length - 1] : null;
+
+            const startClass = direction === 'next' ? 'slide-right' : 'slide-left';
+            const endClass = 'slide-center';
+            const oldEndClass = direction === 'next' ? 'slide-left' : 'slide-right';
+
+            const newImg = createSlideImage(newIndex, startClass);
+            
+            void newImg.offsetWidth; 
+
+            newImg.classList.remove(startClass);
+            newImg.classList.add(endClass);
+
+            if (oldImg) {
+                oldImg.classList.remove('slide-center');
+                oldImg.classList.add(oldEndClass);
+                setTimeout(() => {
+                    if (oldImg && oldImg.parentNode) oldImg.remove();
+                }, 800); 
+            }
+        }
+
+        function createSlideImage(index, initialClass) {
+            const photo = currentAlbumPhotos[index];
+            const stage = document.getElementById('slide-stage');
+            
+            let el;
+            if (photo.type.startsWith('video')) { 
+                // 修改：簡報模式也改用 iframe
+                el = document.createElement('iframe'); 
+                el.src = `https://drive.google.com/file/d/${photo.id}/preview`; 
+                el.allow = "autoplay; fullscreen";
+                el.style.border = "0";
+            } 
+            else { 
+                el = document.createElement('img'); 
+                el.src = photo.url; 
+            }
+            el.className = `slide-image ${initialClass}`;
+            stage.appendChild(el);
+            return el;
+        }
+
+        function togglePresentationAutoPlay() {
+            isPresentationPlaying = !isPresentationPlaying;
+            if(!document.getElementById('drawing-toolbar').classList.contains('toolbar-hidden')) {
+                updatePlayButtonIcon();
+            }
+
+            const statusText = document.getElementById('presentation-status');
+            
+            if (isPresentationPlaying) {
+                statusText.innerText = "自動播放中 📸";
+                startPresentationTimer();
+            } else {
+                statusText.innerText = "已暫停 ⏸️";
+                stopPresentationTimer();
+            }
+        }
+
+        function startPresentationTimer() {
+            stopPresentationTimer();
+            presentationTimer = setInterval(nextSlide, 3500); 
+        }
+
+        function stopPresentationTimer() {
+            if (presentationTimer) {
+                clearInterval(presentationTimer);
+                presentationTimer = null;
+            }
+        }
+
+        function updatePlayButtonIcon() {
+            const btn = document.getElementById('btn-toggle-play');
+            btn.innerHTML = isPresentationPlaying 
+                ? '<i class="fa-solid fa-pause"></i>' 
+                : '<i class="fa-solid fa-play"></i>';
+        }
+
+        // --- 畫筆與工具列 ---
+        function initPresentationCanvas() {
+            const canvas = document.getElementById('drawing-canvas');
+            const startDraw = (e) => {
+                const toolbar = document.getElementById('drawing-toolbar');
+                if (toolbar.classList.contains('toolbar-hidden')) return;
+
+                isDrawing = true;
+                presentationCtx.beginPath();
+                const { x, y } = getEventPos(e);
+                presentationCtx.moveTo(x, y);
+                presentationCtx.strokeStyle = currentPenColor;
+                presentationCtx.lineWidth = 5;
+                presentationCtx.lineCap = 'round';
+                presentationCtx.lineJoin = 'round';
+            };
+            const draw = (e) => {
+                if (!isDrawing) return;
+                e.preventDefault();
+                const { x, y } = getEventPos(e);
+                presentationCtx.lineTo(x, y);
+                presentationCtx.stroke();
+            };
+            const endDraw = () => { isDrawing = false; presentationCtx.closePath(); };
+
+            canvas.addEventListener('mousedown', startDraw);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', endDraw);
+            canvas.addEventListener('mouseout', endDraw);
+            canvas.addEventListener('touchstart', startDraw, { passive: false });
+            canvas.addEventListener('touchmove', draw, { passive: false });
+            canvas.addEventListener('touchend', endDraw);
+        }
+
+        function getEventPos(e) {
+            if (e.touches && e.touches.length > 0) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            return { x: e.clientX, y: e.clientY };
+        }
+        function resizePresentationCanvas() {
+            const canvas = document.getElementById('drawing-canvas');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            presentationCtx = canvas.getContext('2d');
+        }
+        function setPenColor(color) { currentPenColor = color; }
+        function clearCanvas() {
+            const canvas = document.getElementById('drawing-canvas');
+            if (presentationCtx) presentationCtx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+        function toggleToolbar() {
+            const tools = document.getElementById('drawing-tools');
+            const icon = document.getElementById('toolbar-icon');
+            if (isToolbarExpanded) {
+                tools.style.width = '0px'; tools.style.padding = '0px'; tools.style.opacity = '0';
+                icon.className = 'fa-solid fa-chevron-left';
+            } else {
+                tools.style.width = 'auto'; tools.style.padding = '0 0.5rem'; tools.style.opacity = '1';
+                icon.className = 'fa-solid fa-chevron-right';
+            }
+            isToolbarExpanded = !isToolbarExpanded;
+        }
+
+        // --- 打包下載 ---
         async function downloadAlbumZip() {
             if (currentAlbumPhotos.length === 0) return;
             const albumName = document.getElementById('gallery-title').innerText;
@@ -615,155 +1535,179 @@
             Swal.fire('下載完成', downloadType === 'original' ? '原始檔案打包完成！(影片如無法下載已自動轉為串流版)' : '快速打包完成！(影片僅含封面)', 'success');
         }
 
-        // Presentation Mode
-        let isPresentationPlaying = false;
-        let presentationTimer = null;
-        let isDrawing = false;
-        let presentationCtx = null;
-        let currentPenColor = '#ef4444';
-        let isToolbarExpanded = true;
+        // --- 設定與分享功能 (修正與新增) ---
+        
+        function updateUploadOptions(albums) {
+            const datalist = document.getElementById('album-options');
+            datalist.innerHTML = '';
+            albums.forEach(a => datalist.appendChild(new Option(a.name, a.name)));
+        }
 
-        function startPresentationMode(isAutoPlay = false) {
-            const modal = document.getElementById('presentation-modal');
-            const toolbar = document.getElementById('drawing-toolbar');
-            const statusText = document.getElementById('presentation-status');
-            const stage = document.getElementById('slide-stage');
-            modal.classList.remove('hidden');
-            if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(e=>{});
-
-            if (isAutoPlay) { toolbar.classList.add('toolbar-hidden'); stage.style.cursor = 'none'; statusText.innerText = "自動播放中 📸"; } 
-            else { toolbar.classList.remove('toolbar-hidden'); stage.style.cursor = 'crosshair'; statusText.innerText = "簡報模式 ✏️"; }
-
-            stage.querySelectorAll('.slide-image').forEach(img => img.remove());
-            createSlideImage(currentPhotoIndex, 'slide-center');
-            resizePresentationCanvas();
-            window.addEventListener('resize', resizePresentationCanvas);
-            window.addEventListener('keydown', handlePresentationKeydown);
-
-            if (isAutoPlay) { isPresentationPlaying = true; updatePlayButtonIcon(); startPresentationTimer(); } 
-            else { isPresentationPlaying = false; updatePlayButtonIcon(); stopPresentationTimer(); }
-        }
-        function closePresentationMode() {
-            document.getElementById('presentation-modal').classList.add('hidden');
-            if (document.fullscreenElement) document.exitFullscreen();
-            stopPresentationTimer();
-            window.removeEventListener('resize', resizePresentationCanvas);
-            window.removeEventListener('keydown', handlePresentationKeydown);
-            updateMainPhoto();
-        }
-        function handlePresentationKeydown(e) {
-            if (e.key === 'ArrowRight') nextSlide();
-            if (e.key === 'ArrowLeft') prevSlide();
-            if (e.key === 'Escape') closePresentationMode();
-            if (e.key === ' ' || e.key === 'Spacebar') togglePresentationAutoPlay();
-        }
-        function nextSlide() {
-            const oldIndex = currentPhotoIndex;
-            currentPhotoIndex = (currentPhotoIndex + 1) % currentAlbumPhotos.length;
-            performSlideTransition('next', oldIndex, currentPhotoIndex);
-            if (isPresentationPlaying) { stopPresentationTimer(); startPresentationTimer(); }
-            clearCanvas();
-        }
-        function prevSlide() {
-            const oldIndex = currentPhotoIndex;
-            currentPhotoIndex = (currentPhotoIndex - 1 + currentAlbumPhotos.length) % currentAlbumPhotos.length;
-            performSlideTransition('prev', oldIndex, currentPhotoIndex);
-            if (isPresentationPlaying) { stopPresentationTimer(); startPresentationTimer(); }
-            clearCanvas();
-        }
-        function performSlideTransition(direction, oldIndex, newIndex) {
-            const stage = document.getElementById('slide-stage');
-            const currentImages = stage.querySelectorAll('.slide-image');
-            const oldImg = currentImages.length > 0 ? currentImages[currentImages.length - 1] : null;
-            const startClass = direction === 'next' ? 'slide-right' : 'slide-left';
-            const endClass = 'slide-center';
-            const oldEndClass = direction === 'next' ? 'slide-left' : 'slide-right';
-            const newImg = createSlideImage(newIndex, startClass);
-            void newImg.offsetWidth; 
-            newImg.classList.remove(startClass); newImg.classList.add(endClass);
-            if (oldImg) { oldImg.classList.remove('slide-center'); oldImg.classList.add(oldEndClass); setTimeout(() => { if (oldImg && oldImg.parentNode) oldImg.remove(); }, 800); }
-        }
-        function createSlideImage(index, initialClass) {
-            const photo = currentAlbumPhotos[index];
-            const stage = document.getElementById('slide-stage');
-            let el;
-            if (photo.type.startsWith('video')) { 
-                // 修改：簡報模式也改用 iframe
-                el = document.createElement('iframe'); 
-                el.src = `https://drive.google.com/file/d/${photo.id}/preview`; 
-                el.allow = "autoplay; fullscreen";
-                el.style.border = "0";
-            } 
-            else { 
-                el = document.createElement('img'); 
-                el.src = photo.url; 
+        async function processAndUpload() { 
+            /* 此功能需要後端配合，這裡僅保留結構 */
+            const fileInput = document.getElementById('file-input');
+            const albumName = document.getElementById('upload-album-name').value;
+            if (!fileInput.files.length || !albumName) {
+                Swal.fire('錯誤', '請選擇圖片並輸入相簿名稱', 'error');
+                return;
             }
-            el.className = `slide-image ${initialClass}`;
-            stage.appendChild(el);
-            return el;
-        }
-        function togglePresentationAutoPlay() {
-            isPresentationPlaying = !isPresentationPlaying;
-            if(!document.getElementById('drawing-toolbar').classList.contains('toolbar-hidden')) updatePlayButtonIcon();
-            const statusText = document.getElementById('presentation-status');
-            if (isPresentationPlaying) { statusText.innerText = "自動播放中 📸"; startPresentationTimer(); } else { statusText.innerText = "已暫停 ⏸️"; stopPresentationTimer(); }
-        }
-        function startPresentationTimer() { stopPresentationTimer(); presentationTimer = setInterval(nextSlide, 3500); }
-        function stopPresentationTimer() { if (presentationTimer) { clearInterval(presentationTimer); presentationTimer = null; } }
-        function updatePlayButtonIcon() { document.getElementById('btn-toggle-play').innerHTML = isPresentationPlaying ? '<i class="fa-solid fa-pause"></i>' : '<i class="fa-solid fa-play"></i>'; }
-
-        // Canvas Tools
-        function initPresentationCanvas() {
-            const canvas = document.getElementById('drawing-canvas');
-            const startDraw = (e) => {
-                const toolbar = document.getElementById('drawing-toolbar');
-                if (toolbar.classList.contains('toolbar-hidden')) return;
-                isDrawing = true; presentationCtx.beginPath();
-                const { x, y } = getEventPos(e); presentationCtx.moveTo(x, y);
-                presentationCtx.strokeStyle = currentPenColor; presentationCtx.lineWidth = 5; presentationCtx.lineCap = 'round'; presentationCtx.lineJoin = 'round';
-            };
-            const draw = (e) => { if (!isDrawing) return; e.preventDefault(); const { x, y } = getEventPos(e); presentationCtx.lineTo(x, y); presentationCtx.stroke(); };
-            const endDraw = () => { isDrawing = false; presentationCtx.closePath(); };
-            canvas.addEventListener('mousedown', startDraw); canvas.addEventListener('mousemove', draw); canvas.addEventListener('mouseup', endDraw);
-            canvas.addEventListener('touchstart', startDraw, { passive: false }); canvas.addEventListener('touchmove', draw, { passive: false }); canvas.addEventListener('touchend', endDraw);
-        }
-        function getEventPos(e) { if (e.touches && e.touches.length > 0) return { x: e.touches[0].clientX, y: e.touches[0].clientY }; return { x: e.clientX, y: e.clientY }; }
-        function resizePresentationCanvas() { const canvas = document.getElementById('drawing-canvas'); canvas.width = window.innerWidth; canvas.height = window.innerHeight; presentationCtx = canvas.getContext('2d'); }
-        function setPenColor(color) { currentPenColor = color; }
-        function clearCanvas() { const canvas = document.getElementById('drawing-canvas'); if (presentationCtx) presentationCtx.clearRect(0, 0, canvas.width, canvas.height); }
-        function toggleToolbar() {
-            const tools = document.getElementById('drawing-tools'); const icon = document.getElementById('toolbar-icon');
-            if (isToolbarExpanded) { tools.style.width = '0px'; tools.style.padding = '0px'; tools.style.opacity = '0'; icon.className = 'fa-solid fa-chevron-left'; } 
-            else { tools.style.width = 'auto'; tools.style.padding = '0 0.5rem'; tools.style.opacity = '1'; icon.className = 'fa-solid fa-chevron-right'; }
-            isToolbarExpanded = !isToolbarExpanded;
+            Swal.fire('上傳中', '功能演示：請確認 GAS 後端已部署', 'info');
         }
 
-        // Settings & Shared
         function openSettings() { document.getElementById('settings-modal').classList.remove('hidden'); }
         function closeSettings() { document.getElementById('settings-modal').classList.add('hidden'); }
         function toggleVisibility() { const el = document.getElementById('gas-url-input'); el.type = el.type==='password'?'text':'password'; }
+        
+        // 儲存設定
         function saveSettings() {
             const url = document.getElementById('gas-url-input').value.trim();
             const title = document.getElementById('app-title-input').value.trim();
-            if (!url) { Swal.fire('錯誤', '請輸入 GAS 網址', 'error'); return; }
-            localStorage.setItem('gas_app_url', url); localStorage.setItem('app_title', title || "快樂小學堂相簿");
-            gasUrl = url; appTitle = title;
+            
+            if (!url) {
+                Swal.fire('錯誤', '請輸入 GAS 網址', 'error');
+                return;
+            }
+
+            localStorage.setItem('gas_app_url', url);
+            localStorage.setItem('app_title', title || "快樂小學堂相簿");
+            
+            gasUrl = url;
+            appTitle = title;
             updateAppTitleUI(appTitle);
-            const scriptId = getScriptId(gasUrl); initDB(scriptId);
-            closeSettings(); fetchAlbums(); Swal.fire('已儲存', '設定已更新', 'success');
+            
+            const scriptId = getScriptId(gasUrl);
+            initDB(scriptId);
+
+            closeSettings();
+            fetchAlbums(); 
+            Swal.fire('已儲存', '設定已更新並重新連線', 'success');
         }
-        function resetSettings() { Swal.fire({ title: '清除設定？', icon: 'warning', showCancelButton: true, confirmButtonText: '清除' }).then(async (res) => { if (res.isConfirmed) { localStorage.removeItem('gas_app_url'); localStorage.removeItem('app_title'); await idb.clear(); window.location.href = window.location.pathname; } }); }
-        function generateShareLink() { const url = document.getElementById('gas-url-input').value.trim(); const title = document.getElementById('app-title-input').value.trim(); if (!url) { Swal.fire('提示', '請先儲存 GAS 網址', 'warning'); return; } const config = btoa(url); const baseUrl = window.location.origin + window.location.pathname; const shareUrl = `${baseUrl}?title=${encodeURIComponent(title)}&config=${config}`; document.getElementById('share-url-output').value = shareUrl; document.getElementById('qr-code-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(shareUrl)}`; document.getElementById('share-result').classList.remove('hidden'); document.getElementById('embed-result').classList.add('hidden'); }
-        function generateEmbedCode() { const url = document.getElementById('gas-url-input').value.trim(); const title = document.getElementById('app-title-input').value.trim(); if (!url) { Swal.fire('提示', '請先儲存 GAS 網址', 'warning'); return; } const limit = document.getElementById('embed-limit').value || 16; const config = btoa(url); const baseUrl = window.location.origin + window.location.pathname; const widgetUrl = `${baseUrl}?title=${encodeURIComponent(title)}&config=${config}&mode=widget&limit=${limit}`; const iframeCode = `<iframe src="${widgetUrl}" width="100%" height="540" frameborder="0" scrolling="no" style="border:none; overflow:hidden; background:transparent;"></iframe>`; document.getElementById('embed-code-output').value = iframeCode; document.getElementById('embed-result').classList.remove('hidden'); document.getElementById('share-result').classList.add('hidden'); }
-        function copyEmbedCode() { const copyText = document.getElementById("embed-code-output"); copyText.select(); navigator.clipboard.writeText(copyText.value).then(() => { Swal.fire({ icon: 'success', title: '已複製語法', toast: true, position: 'top-end', showConfirmButton: false, timer: 1500 }); }); }
-        function copyShareUrl() { const copyText = document.getElementById("share-url-output"); copyText.select(); navigator.clipboard.writeText(copyText.value).then(() => { Swal.fire({ icon: 'success', title: '已複製連結', toast: true, position: 'top-end', showConfirmButton: false, timer: 1500 }); }); }
-        function switchTheme(theme) { document.documentElement.setAttribute('data-theme', theme); localStorage.setItem('app_theme', theme); document.getElementById('theme-menu').classList.add('hidden'); }
-        function toggleThemeMenu() { document.getElementById('theme-menu').classList.toggle('hidden'); }
-        function updateAppTitleUI(title) { document.title = title + " 📸"; document.getElementById('app-header-title').innerText = title; }
-        function closeFullscreen() { document.getElementById('fullscreen-modal').classList.add('hidden'); }
+
+        // 清除設定 (Reset)
+        async function resetSettings() {
+            Swal.fire({
+                title: '確定要清除設定嗎？',
+                text: "這將會刪除儲存的 GAS 網址與標題，並重整網頁回到初始狀態。",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: '是的，清除！',
+                cancelButtonText: '取消'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    localStorage.removeItem('gas_app_url');
+                    localStorage.removeItem('app_title');
+                    // 清除 IDB
+                    await idb.clear();
+                    // 清除網址參數並重整
+                    window.location.href = window.location.pathname;
+                }
+            });
+        }
+
+        // 產生分享連結
+        async function generateShareLink() {
+            const url = document.getElementById('gas-url-input').value.trim();
+            const title = document.getElementById('app-title-input').value.trim();
+            
+            if (!url) {
+                Swal.fire('無法產生', '請先輸入並儲存 GAS 網址', 'warning');
+                return;
+            }
+
+            try {
+                // Base64 編碼
+                const config = btoa(url); 
+                const baseUrl = window.location.origin + window.location.pathname;
+                const shareUrl = `${baseUrl}?title=${encodeURIComponent(title)}&config=${config}`;
+
+                // 設定連結
+                const output = document.getElementById('share-url-output');
+                output.value = shareUrl;
+                document.getElementById('open-share-link').href = shareUrl;
+                
+                // 產生 QR Code (使用 QR Server API)
+                document.getElementById('qr-code-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(shareUrl)}`;
+                
+                // 顯示結果區域
+                document.getElementById('share-result').classList.remove('hidden');
+                document.getElementById('embed-result').classList.add('hidden'); 
+            } catch (e) {
+                console.error(e);
+                Swal.fire('錯誤', '產生連結時發生錯誤', 'error');
+            }
+        }
+        
+        // 產生嵌入語法
+        function generateEmbedCode() {
+            const url = document.getElementById('gas-url-input').value.trim();
+            const title = document.getElementById('app-title-input').value.trim();
+            if (!url) { Swal.fire('提示', '請先儲存 GAS 網址', 'warning'); return; }
+
+            const limit = document.getElementById('embed-limit').value || 16;
+            const config = btoa(url);
+            const baseUrl = window.location.origin + window.location.pathname;
+            
+            // 組合 Widget URL
+            const widgetUrl = `${baseUrl}?title=${encodeURIComponent(title)}&config=${config}&mode=widget&limit=${limit}`;
+            
+            // 產生 Iframe Tag (調整高度以容納兩排)
+            const iframeCode = `<iframe src="${widgetUrl}" width="100%" height="540" frameborder="0" scrolling="no" style="border:none; overflow:hidden; background:transparent;"></iframe>`;
+
+            document.getElementById('embed-code-output').value = iframeCode;
+            
+            document.getElementById('embed-result').classList.remove('hidden');
+            document.getElementById('share-result').classList.add('hidden'); // 隱藏分享區
+        }
+        
+        function copyEmbedCode() {
+            const copyText = document.getElementById("embed-code-output");
+            copyText.select();
+            navigator.clipboard.writeText(copyText.value).then(() => {
+                 Swal.fire({ icon: 'success', title: '已複製語法', toast: true, position: 'top-end', showConfirmButton: false, timer: 1500 });
+            });
+        }
+
+        // 複製分享連結
+        function copyShareUrl() {
+            const copyText = document.getElementById("share-url-output");
+            copyText.select();
+            copyText.setSelectionRange(0, 99999); // For mobile
+            navigator.clipboard.writeText(copyText.value).then(() => {
+                 Swal.fire({
+                    icon: 'success',
+                    title: '已複製連結',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+            });
+        }
+
         function openHelp() { document.getElementById('help-modal').classList.remove('hidden'); }
         function closeHelp() { document.getElementById('help-modal').classList.add('hidden'); }
-        function copyCode() { /* ... */ }
+        // 修正後的複製程式碼函式
+        function copyCode() { 
+            navigator.clipboard.writeText(gasCodeString)
+                .then(() => {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '複製成功',
+                        text: '程式碼已複製到剪貼簿，請貼上到 Apps Script 編輯器中。',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                })
+                .catch(err => {
+                    console.error('複製失敗:', err);
+                    Swal.fire('錯誤', '無法複製程式碼，請手動選取複製。', 'error');
+                });
+        }
+        function openUploadModal() { document.getElementById('upload-modal').classList.remove('hidden'); }
+        function closeUploadModal() { document.getElementById('upload-modal').classList.add('hidden'); }
+        function closeGallery() { document.getElementById('gallery-modal').classList.add('hidden'); document.getElementById('main-view').innerHTML = ''; }
     </script>
 </body>
 </html>
