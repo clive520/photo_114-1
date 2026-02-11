@@ -323,25 +323,62 @@
 
     <!-- JS 邏輯 -->
     <script>
-        // --- 沿用原有的 IndexedDB 與全域變數 ---
-        const dbName = 'HappySchoolDB';
+        // --- 修改後的 IndexedDB Helper (支援動態 DB 名稱) ---
+        let dbName = 'HappySchoolDB'; // 預設名稱，後續會被覆蓋
         const storeName = 'albumsStore';
-        // (IndexedDB 程式碼省略，與原版相同)
-        const dbPromise = new Promise((resolve, reject) => {
-            const request = indexedDB.open(dbName, 1);
-            request.onupgradeneeded = (e) => {
-                const db = e.target.result;
-                if (!db.objectStoreNames.contains(storeName)) db.createObjectStore(storeName);
-            };
-            request.onsuccess = (e) => resolve(e.target.result);
-            request.onerror = (e) => reject(e.target.error);
-        });
+        let dbPromise = null;
+
+        // 初始化資料庫 (加入 Suffix 以區隔不同學年/不同 GAS)
+        function initDB(suffix = '') {
+            if (suffix) {
+                // 取 Script ID 後 10 碼作為識別，避免名稱過長
+                const shortId = suffix.length > 10 ? suffix.slice(-10) : suffix;
+                dbName = `HappySchoolDB_${shortId}`;
+            }
+            
+            dbPromise = new Promise((resolve, reject) => {
+                const request = indexedDB.open(dbName, 1);
+                request.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains(storeName)) db.createObjectStore(storeName);
+                };
+                request.onsuccess = (e) => resolve(e.target.result);
+                request.onerror = (e) => reject(e.target.error);
+            });
+        }
+
         const idb = {
-            async get(key) { try { const db = await dbPromise; return new Promise((resolve, reject) => { const tx = db.transaction(storeName, 'readonly'); const req = tx.objectStore(storeName).get(key); req.onsuccess = () => resolve(req.result); req.onerror = () => reject(req.error); }); } catch(e){return null;} },
-            async set(key, val) { try { const db = await dbPromise; const tx = db.transaction(storeName, 'readwrite'); tx.objectStore(storeName).put(val, key); } catch(e){} },
-            async clear() { try { const db = await dbPromise; const tx = db.transaction(storeName, 'readwrite'); tx.objectStore(storeName).clear(); } catch(e){} }
+            async get(key) { 
+                if(!dbPromise) initDB(); 
+                try { 
+                    const db = await dbPromise; 
+                    return new Promise((resolve, reject) => { 
+                        const tx = db.transaction(storeName, 'readonly'); 
+                        const req = tx.objectStore(storeName).get(key); 
+                        req.onsuccess = () => resolve(req.result); 
+                        req.onerror = () => reject(req.error); 
+                    }); 
+                } catch(e){ return null; } 
+            },
+            async set(key, val) { 
+                if(!dbPromise) initDB();
+                try { 
+                    const db = await dbPromise; 
+                    const tx = db.transaction(storeName, 'readwrite'); 
+                    tx.objectStore(storeName).put(val, key); 
+                } catch(e){} 
+            },
+            async clear() { 
+                if(!dbPromise) initDB();
+                try { 
+                    const db = await dbPromise; 
+                    const tx = db.transaction(storeName, 'readwrite'); 
+                    tx.objectStore(storeName).clear(); 
+                } catch(e){} 
+            }
         };
 
+        // --- 全域變數 ---
         let gasUrl = localStorage.getItem('gas_app_url') || "";
         let appTitle = localStorage.getItem('app_title') || "快樂小學堂相簿";
         let albumsData = [];
@@ -350,18 +387,28 @@
         let searchKeyword = "";
         let currentSortMode = "default";
         
-        // --- 新增：Widget 模式變數 ---
+        // --- Widget 模式變數 ---
         let isWidgetMode = false;
-        let widgetLimit = 16; // 改為預設 16
+        let widgetLimit = 16; 
+        
+        // --- 是否為「獨立連結」模式 (不儲存到全域 LocalStorage) ---
+        let isStandaloneMode = false;
 
         // --- GAS Code String (用於說明頁面) ---
         const gasCodeString = `(請貼上您的 GAS 程式碼)`; 
 
-        // 輔助函式 (省略 compressAlbums/decompressAlbums，與原版相同)
+        // 輔助函式
         function compressAlbums(albums) { return albums.map(album => ({ i: album.id, n: album.name, c: album.cover, p: album.photos.map(p => ({ i: p.id, n: p.name, t: p.type })) })); }
         function decompressAlbums(minified) { if(!minified) return []; if(minified.length>0 && minified[0].photos) return minified; return minified.map(a => ({ id: a.i, name: a.n, cover: a.c, photos: a.p.map(p => ({ id: p.i, name: p.n, type: p.t, url: `https://lh3.googleusercontent.com/d/${p.i}=s800`, downloadUrl: `https://drive.google.com/uc?export=download&id=${p.i}` })) })); }
+        
+        // 從 GAS URL 提取 Script ID
+        function getScriptId(url) {
+            if (!url) return '';
+            const match = url.match(/\/s\/([a-zA-Z0-9-_]+)\//);
+            return match ? match[1] : '';
+        }
 
-        // --- 初始化 ---
+        // --- 初始化 (核心修改區) ---
         window.onload = async function() {
             const urlParams = new URLSearchParams(window.location.search);
             
@@ -369,12 +416,10 @@
             if (urlParams.get('mode') === 'widget') {
                 isWidgetMode = true;
                 document.body.classList.add('widget-mode');
-                // 讀取數量限制
                 const limitParam = urlParams.get('limit');
-                if (limitParam) widgetLimit = parseInt(limitParam, 10);
-                else widgetLimit = 16; // 若網址無參數，強制預設為 16
+                widgetLimit = limitParam ? parseInt(limitParam, 10) : 16;
 
-                // [NEW] 顯示 Widget 載入動畫
+                // Widget 載入動畫
                 const container = document.getElementById('widget-container');
                 container.classList.remove('hidden');
                 container.innerHTML = `
@@ -390,40 +435,58 @@
                 `;
             }
 
-            // 2. 處理 Config (分享/嵌入連結)
+            // 2. 處理 Config (關鍵修改：優先使用 Config 參數並啟用隔離)
             const config = urlParams.get('config');
             if (config) {
                 try {
                     const decodedUrl = atob(config);
                     if (decodedUrl.startsWith('http')) {
                         gasUrl = decodedUrl;
-                        localStorage.setItem('gas_app_url', gasUrl);
-                        // 如果不是 Widget 模式才清除 URL 參數，Widget 模式保留參數
+                        isStandaloneMode = true; // 標記為獨立模式
+                        
+                        // 只有在非 Widget 模式且使用者明確想儲存時才更新 LocalStorage
+                        // 這裡為了防止干擾，如果有 config，我們就不自動更新 LocalStorage 的 global key
                         if (!isWidgetMode) {
-                            window.history.replaceState({}, document.title, window.location.pathname);
-                            Swal.fire({ icon: 'success', title: '連線成功！', timer: 1500, showConfirmButton: false });
+                            // 僅顯示連線成功提示，不覆蓋全域變數
+                            Swal.fire({ icon: 'success', title: '已載入指定相簿', text: '使用分享連結模式 (不影響本機其他設定)', timer: 1500, showConfirmButton: false });
                         }
                     }
                 } catch (e) { console.error(e); }
+            } else {
+                // 沒有 config 參數時，才讀取 LocalStorage
+                // 這確保了直接開啟 HTML 檔會讀取最後一次手動設定的內容
+                // 但如果透過分享連結開啟，則完全依照連結內容
+                gasUrl = localStorage.getItem('gas_app_url') || "";
             }
 
             // 3. 設定 UI 初始化
             const savedTheme = localStorage.getItem('app_theme') || 'kids';
             switchTheme(savedTheme);
-            document.getElementById('code-block').innerText = gasCodeString; // 實際使用時請填入 Code
+            document.getElementById('code-block').innerText = gasCodeString;
             
             const paramTitle = urlParams.get('title');
-            if (paramTitle) { appTitle = decodeURIComponent(paramTitle); localStorage.setItem('app_title', appTitle); }
+            if (paramTitle) { 
+                appTitle = decodeURIComponent(paramTitle); 
+                // 只有沒帶參數時才依賴 LocalStorage
+                if(!config) localStorage.setItem('app_title', appTitle);
+            } else if (!config) {
+                appTitle = localStorage.getItem('app_title') || "快樂小學堂相簿";
+            }
             updateAppTitleUI(appTitle);
             
             document.getElementById('app-title-input').value = appTitle;
             if (gasUrl) document.getElementById('gas-url-input').value = gasUrl;
 
-            // 4. 資料載入流程
+            // 4. 初始化資料庫 (使用 Script ID 進行隔離)
+            const scriptId = getScriptId(gasUrl);
+            initDB(scriptId); // 這裡會建立 HappySchoolDB_XXXXXX
+
+            // 5. 資料載入流程
             if (gasUrl) {
                 const cachedData = await idb.get('cached_albums_min_v1');
                 if (cachedData) {
                     try {
+                        console.log("Loading from isolated DB:", dbName);
                         const minified = (typeof cachedData === 'string') ? JSON.parse(cachedData) : cachedData;
                         albumsData = decompressAlbums(minified);
                         
@@ -467,7 +530,7 @@
             } catch (error) {
                 console.error(error);
                 if(isWidgetMode) {
-                    document.getElementById('widget-container').innerHTML = '<div class="text-white p-4">無法載入相簿</div>';
+                    document.getElementById('widget-container').innerHTML = '<div class="text-white p-4 text-center">無法載入相簿<br>請檢查 GAS 網址</div>';
                 }
             } finally {
                 loading.classList.add('hidden');
@@ -480,7 +543,6 @@
             container.classList.remove('hidden');
             container.innerHTML = '';
 
-            // 1. 取得指定數量的相簿 (預設 16)
             const targetAlbums = albums.slice(0, widgetLimit);
 
             if (targetAlbums.length === 0) {
@@ -488,13 +550,11 @@
                 return;
             }
 
-            // 2. 分組：切分成上下兩排 (Row 1 & Row 2)
             const halfIndex = Math.ceil(targetAlbums.length / 2);
             const row1Albums = targetAlbums.slice(0, halfIndex);
             const row2Albums = targetAlbums.slice(halfIndex);
 
-            // 定義產生單一跑馬燈列的函式
-            const createMarqueeRow = (items, speedClass) => {
+            const createMarqueeRow = (items) => {
                 if (items.length === 0) return null;
 
                 const wrapper = document.createElement('div');
@@ -502,16 +562,14 @@
                 
                 const track = document.createElement('div');
                 track.className = 'marquee-track flex w-max animate-marquee';
-                // 可選擇性加入不同速度的 class 或 style，這裡示範都用預設動畫，但可自訂
                 
-                // 產生卡片內容
                 let contentHTML = '';
                 items.forEach(album => {
-                    // 縮小圖片請求尺寸
                     let coverUrl = album.cover || '';
                     if (coverUrl.includes('=s800')) coverUrl = coverUrl.replace('=s800', '=s400');
                     else if (coverUrl.includes('googleusercontent.com')) coverUrl += '=s400';
 
+                    // 關鍵：產生連結時，確保也是使用帶有 config 的完整網址，維持隔離狀態
                     const config = btoa(gasUrl);
                     const fullUrl = `${window.location.pathname}?title=${encodeURIComponent(appTitle)}&config=${config}`;
                     
@@ -531,7 +589,6 @@
                     `;
                 });
 
-                // 複製內容以達成無縫輪播 (如果數量少，多複製幾次)
                 const minItemsForLoop = 6;
                 let loopCount = 1;
                 if (items.length < minItemsForLoop) loopCount = Math.ceil(minItemsForLoop / items.length);
@@ -544,7 +601,6 @@
                 return wrapper;
             };
 
-            // 3. 建立垂直容器並放入兩列
             const mainFlex = document.createElement('div');
             mainFlex.className = 'flex flex-col h-full w-full overflow-hidden';
 
@@ -557,7 +613,7 @@
             container.appendChild(mainFlex);
         }
 
-        // --- 原有功能函式 (RenderAlbums, Settings, etc.) ---
+        // --- 原有功能函式 ---
         function renderAlbums(albums) {
             const grid = document.getElementById('album-grid');
             grid.innerHTML = ''; 
@@ -597,7 +653,7 @@
             renderAlbums(filtered);
         }
 
-        // --- 設定相關 (包含新增的嵌入產生器) ---
+        // --- 設定相關 ---
         function openSettings() { document.getElementById('settings-modal').classList.remove('hidden'); }
         function closeSettings() { document.getElementById('settings-modal').classList.add('hidden'); }
         function toggleVisibility() { const el = document.getElementById('gas-url-input'); el.type = el.type==='password'?'text':'password'; }
@@ -606,10 +662,18 @@
             const url = document.getElementById('gas-url-input').value.trim();
             const title = document.getElementById('app-title-input').value.trim();
             if (!url) { Swal.fire('錯誤', '請輸入 GAS 網址', 'error'); return; }
+            
+            // 手動儲存時，更新 LocalStorage
             localStorage.setItem('gas_app_url', url);
             localStorage.setItem('app_title', title || "快樂小學堂相簿");
+            
             gasUrl = url; appTitle = title;
             updateAppTitleUI(appTitle);
+            
+            // 重置 DB 並重新載入
+            const scriptId = getScriptId(gasUrl);
+            initDB(scriptId);
+
             closeSettings();
             fetchAlbums(); 
             Swal.fire('已儲存', '設定已更新', 'success');
@@ -620,12 +684,11 @@
                 if (res.isConfirmed) {
                     localStorage.removeItem('gas_app_url'); localStorage.removeItem('app_title');
                     await idb.clear();
-                    window.location.href = window.location.pathname;
+                    window.location.href = window.location.pathname; // 重整移除參數
                 }
             });
         }
 
-        // 產生分享連結
         function generateShareLink() {
             const url = document.getElementById('gas-url-input').value.trim();
             const title = document.getElementById('app-title-input').value.trim();
@@ -639,10 +702,9 @@
             document.getElementById('qr-code-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(shareUrl)}`;
             
             document.getElementById('share-result').classList.remove('hidden');
-            document.getElementById('embed-result').classList.add('hidden'); // 隱藏嵌入區
+            document.getElementById('embed-result').classList.add('hidden'); 
         }
 
-        // --- 新增：產生嵌入語法 ---
         function generateEmbedCode() {
             const url = document.getElementById('gas-url-input').value.trim();
             const title = document.getElementById('app-title-input').value.trim();
@@ -652,16 +714,15 @@
             const config = btoa(url);
             const baseUrl = window.location.origin + window.location.pathname;
             
-            // 組合 Widget URL
+            // Widget 也必須使用帶 config 的 URL，確保能正確隔離
             const widgetUrl = `${baseUrl}?title=${encodeURIComponent(title)}&config=${config}&mode=widget&limit=${limit}`;
             
-            // 產生 Iframe Tag (調整高度以容納兩排)
             const iframeCode = `<iframe src="${widgetUrl}" width="100%" height="540" frameborder="0" scrolling="no" style="border:none; overflow:hidden; background:transparent;"></iframe>`;
 
             document.getElementById('embed-code-output').value = iframeCode;
             
             document.getElementById('embed-result').classList.remove('hidden');
-            document.getElementById('share-result').classList.add('hidden'); // 隱藏分享區
+            document.getElementById('share-result').classList.add('hidden'); 
         }
 
         function copyEmbedCode() {
@@ -689,8 +750,8 @@
         function toggleThemeMenu() { document.getElementById('theme-menu').classList.toggle('hidden'); }
         function updateAppTitleUI(title) { document.title = title + " 📸"; document.getElementById('app-header-title').innerText = title; }
         
-        // --- Gallery & Presentation (保留必要功能) ---
-        function openGallery(id) { /* 略，與原版相同邏輯 */ 
+        // --- Gallery & Presentation ---
+        function openGallery(id) { 
             const album = albumsData.find(a => a.id === id);
             if (!album) return;
             currentAlbumPhotos = album.photos; currentPhotoIndex = 0;
