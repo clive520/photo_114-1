@@ -35,7 +35,7 @@
                     },
                     animation: {
                         'fade-in': 'fadeIn 0.5s ease-out',
-                        'marquee': 'marquee 25s linear infinite', /* 跑馬燈動畫 */
+                        'marquee': 'marquee 30s linear infinite', /* 調整預設速度 */
                     },
                     keyframes: {
                         fadeIn: {
@@ -287,12 +287,12 @@
 
                 <!-- 嵌入代碼結果 (新增) -->
                 <div id="embed-result" class="hidden text-left space-y-2 mt-2">
-                    <label class="text-xs font-bold block">顯示數量 (預設8本)</label>
-                    <input type="number" id="embed-limit" value="8" min="1" max="50" class="border rounded p-1 text-sm w-20 bg-white" onchange="generateEmbedCode()">
+                    <label class="text-xs font-bold block">顯示數量 (預設16本)</label>
+                    <input type="number" id="embed-limit" value="16" min="1" max="50" class="border rounded p-1 text-sm w-20 bg-white" onchange="generateEmbedCode()">
                     <label class="text-xs font-bold block">嵌入語法 (Iframe)</label>
                     <textarea id="embed-code-output" readonly rows="4" class="w-full border text-xs p-2 rounded bg-gray-800 text-green-400 font-mono focus:outline-none"></textarea>
                     <button onclick="copyEmbedCode()" class="w-full bg-gray-200 hover:bg-gray-300 text-xs py-2 rounded font-bold"><i class="fa-solid fa-copy"></i> 複製語法</button>
-                    <p class="text-[10px] text-gray-500">提示：嵌入高度預設為 260px，圖片將自動縮小至 400px 以加快載入。</p>
+                    <p class="text-[10px] text-gray-500">提示：顯示兩排相簿，建議嵌入高度設為 540px。</p>
                 </div>
             </div>
 
@@ -350,7 +350,7 @@
         
         // --- 新增：Widget 模式變數 ---
         let isWidgetMode = false;
-        let widgetLimit = 8; // 預設顯示數量
+        let widgetLimit = 16; // 改為預設 16
 
         // --- GAS Code String (用於說明頁面) ---
         const gasCodeString = `(請貼上您的 GAS 程式碼)`; 
@@ -370,6 +370,7 @@
                 // 讀取數量限制
                 const limitParam = urlParams.get('limit');
                 if (limitParam) widgetLimit = parseInt(limitParam, 10);
+                else widgetLimit = 16; // 若網址無參數，強制預設為 16
             }
 
             // 2. 處理 Config (分享/嵌入連結)
@@ -456,15 +457,13 @@
             }
         }
 
-        // --- Widget Render Logic (新功能) ---
+        // --- Widget Render Logic (雙排模式) ---
         function renderWidget(albums) {
             const container = document.getElementById('widget-container');
             container.classList.remove('hidden');
             container.innerHTML = '';
 
-            // 1. 篩選與排序 (預設顯示最新的 N 本)
-            // 這裡假設原始資料尚未排序，先依照時間(如果是預設)或其他邏輯排序
-            // 這裡簡單取前 N 本 (假設後端回傳順序就是時間序，或者可以先 sort)
+            // 1. 取得指定數量的相簿 (預設 16)
             const targetAlbums = albums.slice(0, widgetLimit);
 
             if (targetAlbums.length === 0) {
@@ -472,60 +471,73 @@
                 return;
             }
 
-            // 2. 建立 Marquee 結構
-            const wrapper = document.createElement('div');
-            wrapper.className = 'marquee-wrapper h-full';
-            
-            const track = document.createElement('div');
-            track.className = 'marquee-track animate-marquee'; // 套用動畫
-            
-            // 3. 產生卡片內容 (生成 HTML 字串)
-            const createCardHTML = (album) => {
-                // 將封面圖 URL 改為 s400 以縮小流量 (假設原連結格式支援此參數)
-                // 原始: .../d/ID=s800 -> 改為 .../d/ID=s400
-                let coverUrl = album.cover || '';
-                if (coverUrl.includes('=s800')) {
-                    coverUrl = coverUrl.replace('=s800', '=s400');
-                } else if (coverUrl.includes('googleusercontent.com')) {
-                    coverUrl += '=s400'; // 若無參數則附加
-                }
+            // 2. 分組：切分成上下兩排 (Row 1 & Row 2)
+            const halfIndex = Math.ceil(targetAlbums.length / 2);
+            const row1Albums = targetAlbums.slice(0, halfIndex);
+            const row2Albums = targetAlbums.slice(halfIndex);
 
-                // 點擊後開啟新視窗跳轉到完整相簿頁面
-                // 連結需包含 config 以便觀眾能看到內容
-                const config = btoa(gasUrl);
-                const fullUrl = `${window.location.pathname}?title=${encodeURIComponent(appTitle)}&config=${config}`;
+            // 定義產生單一跑馬燈列的函式
+            const createMarqueeRow = (items, speedClass) => {
+                if (items.length === 0) return null;
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'marquee-wrapper flex-1 overflow-hidden relative flex items-center bg-white/50 dark:bg-black/50 backdrop-blur-sm rounded-xl mb-2 last:mb-0';
                 
-                return `
-                <div class="widget-card group" onclick="window.open('${fullUrl}', '_blank')">
-                    <div class="relative h-48 overflow-hidden bg-gray-200">
-                        <img src="${coverUrl}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500" loading="lazy" alt="${album.name}">
-                        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition flex items-center justify-center">
-                            <i class="fa-solid fa-arrow-up-right-from-square text-white opacity-0 group-hover:opacity-100 text-2xl drop-shadow-md"></i>
-                        </div>
-                        <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
-                             <h3 class="text-white font-bold text-sm truncate text-shadow">${album.name}</h3>
-                             <p class="text-gray-200 text-xs">${album.photos.length} 張</p>
+                const track = document.createElement('div');
+                track.className = 'marquee-track flex w-max animate-marquee';
+                // 可選擇性加入不同速度的 class 或 style，這裡示範都用預設動畫，但可自訂
+                
+                // 產生卡片內容
+                let contentHTML = '';
+                items.forEach(album => {
+                    // 縮小圖片請求尺寸
+                    let coverUrl = album.cover || '';
+                    if (coverUrl.includes('=s800')) coverUrl = coverUrl.replace('=s800', '=s400');
+                    else if (coverUrl.includes('googleusercontent.com')) coverUrl += '=s400';
+
+                    const config = btoa(gasUrl);
+                    const fullUrl = `${window.location.pathname}?title=${encodeURIComponent(appTitle)}&config=${config}`;
+                    
+                    contentHTML += `
+                    <div class="widget-card group" onclick="window.open('${fullUrl}', '_blank')">
+                        <div class="relative h-48 overflow-hidden bg-gray-200">
+                            <img src="${coverUrl}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500" loading="lazy" alt="${album.name}">
+                            <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition flex items-center justify-center">
+                                <i class="fa-solid fa-arrow-up-right-from-square text-white opacity-0 group-hover:opacity-100 text-2xl drop-shadow-md"></i>
+                            </div>
+                            <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
+                                 <h3 class="text-white font-bold text-sm truncate text-shadow">${album.name}</h3>
+                                 <p class="text-gray-200 text-xs">${album.photos.length} 張</p>
+                            </div>
                         </div>
                     </div>
-                </div>
-                `;
+                    `;
+                });
+
+                // 複製內容以達成無縫輪播 (如果數量少，多複製幾次)
+                const minItemsForLoop = 6;
+                let loopCount = 1;
+                if (items.length < minItemsForLoop) loopCount = Math.ceil(minItemsForLoop / items.length);
+                
+                let finalHTML = contentHTML; 
+                for(let i=0; i<loopCount; i++) finalHTML += contentHTML;
+
+                track.innerHTML = finalHTML;
+                wrapper.appendChild(track);
+                return wrapper;
             };
 
-            // 4. 填充內容 (複製兩份以達成無縫循環)
-            let contentHTML = '';
-            targetAlbums.forEach(album => contentHTML += createCardHTML(album));
-            
-            // 如果相簿數量太少，為了填滿螢幕跑馬燈，多複製幾次
-            const minItemsForMarquee = 6; 
-            if (targetAlbums.length < minItemsForMarquee) {
-                targetAlbums.forEach(album => contentHTML += createCardHTML(album));
-            }
+            // 3. 建立垂直容器並放入兩列
+            const mainFlex = document.createElement('div');
+            mainFlex.className = 'flex flex-col h-full w-full overflow-hidden';
 
-            // 放入兩組內容
-            track.innerHTML = contentHTML + contentHTML;
-            
-            wrapper.appendChild(track);
-            container.appendChild(wrapper);
+            const row1El = createMarqueeRow(row1Albums);
+            const row2El = createMarqueeRow(row2Albums);
+
+            if (row1El) mainFlex.appendChild(row1El);
+            if (row2El) mainFlex.appendChild(row2El);
+
+            container.appendChild(mainFlex);
         }
 
         // --- 原有功能函式 (RenderAlbums, Settings, etc.) ---
@@ -619,15 +631,15 @@
             const title = document.getElementById('app-title-input').value.trim();
             if (!url) { Swal.fire('提示', '請先儲存 GAS 網址', 'warning'); return; }
 
-            const limit = document.getElementById('embed-limit').value || 8;
+            const limit = document.getElementById('embed-limit').value || 16;
             const config = btoa(url);
             const baseUrl = window.location.origin + window.location.pathname;
             
             // 組合 Widget URL
             const widgetUrl = `${baseUrl}?title=${encodeURIComponent(title)}&config=${config}&mode=widget&limit=${limit}`;
             
-            // 產生 Iframe Tag
-            const iframeCode = `<iframe src="${widgetUrl}" width="100%" height="260" frameborder="0" scrolling="no" style="border:none; overflow:hidden; background:transparent;"></iframe>`;
+            // 產生 Iframe Tag (調整高度以容納兩排)
+            const iframeCode = `<iframe src="${widgetUrl}" width="100%" height="540" frameborder="0" scrolling="no" style="border:none; overflow:hidden; background:transparent;"></iframe>`;
 
             document.getElementById('embed-code-output').value = iframeCode;
             
