@@ -371,6 +371,18 @@
                 const limitParam = urlParams.get('limit');
                 if (limitParam) widgetLimit = parseInt(limitParam, 10);
                 else widgetLimit = 16; // 若網址無參數，強制預設為 16
+
+                // [NEW] 顯示 Widget 載入動畫
+                const container = document.getElementById('widget-container');
+                container.classList.remove('hidden');
+                container.innerHTML = `
+                    <div class="w-full h-full flex flex-col justify-center items-center">
+                        <div class="loader mb-2"></div>
+                        <div class="text-gray-500 font-bold text-sm bg-white/80 px-3 py-1 rounded-full backdrop-blur-sm shadow-sm">
+                            相簿讀取中...
+                        </div>
+                    </div>
+                `;
             }
 
             // 2. 處理 Config (分享/嵌入連結)
