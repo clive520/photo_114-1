@@ -280,7 +280,7 @@
                            class="w-full pl-10 pr-4 py-2 rounded-full border border-gray-300 bg-transparent focus:outline-none focus:ring-2 focus:ring-kids-blue transition">
                     <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 opacity-50"></i>
                 </div>
-                <!-- 同步按鈕 (新功能) -->
+                <!-- 同步按鈕 -->
                 <button onclick="syncAlbums()" id="btn-sync" class="theme-btn bg-kids-blue hover:brightness-110 text-white px-4 py-2 flex items-center transition whitespace-nowrap shadow-md" title="檢查雲端更新">
                     <i id="sync-icon" class="fa-solid fa-rotate mr-2"></i>
                     <span class="hidden sm:inline">檢查更新</span>
@@ -305,7 +305,7 @@
     <!-- 精簡浮動頁尾 (右下角) -->
     <div class="fixed bottom-4 right-4 z-40 theme-card !bg-opacity-90 backdrop-blur-sm p-3 text-xs flex flex-col items-end space-y-1 transition hover:opacity-100 opacity-80 group">
         <div class="font-bold flex items-center">
-            Made by <a href="https://kentxchang.blogspot.com/" target="_blank" class="text-kids-blue hover:text-blue-600 transition ml-1 underline decoration-2 decoration-kids-yellow">阿剛老師</a>
+            Made by <a href="https://gsyan888.blogspot.com/" target="_blank" class="text-kids-blue hover:text-blue-600 transition ml-1 underline decoration-2 decoration-kids-yellow">阿剛老師</a>
         </div>
         <div class="flex items-center space-x-1">
             <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" class="flex items-center hover:text-kids-blue transition" title="創用 CC 姓名標示-非商業性-相同方式分享 4.0 國際 授權條款">
@@ -759,6 +759,40 @@ function proxyShortenUrl(longUrl) {
         
         function getScriptId(url) { if (!url) return ''; const match = url.match(/\/s\/([a-zA-Z0-9-_]+)\//); return match ? match[1] : ''; }
 
+        // --- 策略一：背景默默更新 (Background Silent Sync) ---
+        async function silentBackgroundSync() {
+            if (!gasUrl) return;
+            console.log("開始背景默默更新檢查...");
+            try {
+                const response = await fetch(`${gasUrl}?action=getAlbums`);
+                const json = await response.json();
+                if (json.status === 'success') {
+                    const freshData = json.data;
+                    const newMinified = compressAlbums(freshData);
+                    const oldMinified = await idb.get('cached_albums_min_v1');
+                    
+                    // 比對新舊資料的壓縮字串，若不同代表有更新
+                    if (JSON.stringify(oldMinified) !== JSON.stringify(newMinified)) {
+                        console.log("發現新照片！正在背景更新畫面...");
+                        albumsData = freshData;
+                        await idb.set('cached_albums_min_v1', newMinified); // 更新快取
+                        
+                        // 根據模式重新渲染畫面，不打擾使用者
+                        if (isWidgetMode) {
+                            renderWidget(albumsData);
+                        } else {
+                            filterAndSortAlbums(); 
+                            updateUploadOptions(albumsData);
+                        }
+                    } else {
+                        console.log("背景檢查完畢，相簿已是最新狀態。");
+                    }
+                }
+            } catch (e) {
+                console.warn("背景默默更新失敗（可能是網路連線問題）", e);
+            }
+        }
+
         // --- 初始化 ---
         window.onload = async function() {
             // 載入主題
@@ -832,9 +866,13 @@ function proxyShortenUrl(longUrl) {
                         } else {
                             renderAlbums(albumsData);
                             document.getElementById('control-bar').classList.remove('hidden');
+                            updateUploadOptions(albumsData);
                         }
-                        updateUploadOptions(albumsData);
                         document.getElementById('loading').classList.add('hidden'); 
+                        
+                        // --- 啟動策略一：背景默默更新 ---
+                        silentBackgroundSync();
+                        
                     } catch (e) {
                         console.error("Cache corrupted, fetching fresh data...", e);
                         fetchAlbums(); 
@@ -1223,7 +1261,7 @@ function proxyShortenUrl(longUrl) {
             document.getElementById('fullscreen-modal').classList.add('hidden');
         }
 
-        // --- 簡報與自動播放模式 (核心修改) ---
+        // --- 簡報與自動播放模式 ---
 
         function startPresentationMode(isAutoPlay = false) {
             const modal = document.getElementById('presentation-modal');
@@ -1346,7 +1384,6 @@ function proxyShortenUrl(longUrl) {
             
             let el;
             if (photo.type.startsWith('video')) { 
-                // 修改：簡報模式也改用 iframe
                 el = document.createElement('iframe'); 
                 el.src = `https://drive.google.com/file/d/${photo.id}/preview`; 
                 el.allow = "autoplay; fullscreen";
@@ -1509,8 +1546,6 @@ function proxyShortenUrl(longUrl) {
                                 // 檢查是否被 Google Drive 擋下來 (回傳了 HTML 而不是影片)
                                 if (contentType && contentType.includes('text/html')) {
                                     console.warn(`原始影片下載受阻 (ID: ${photo.id})，嘗試降級下載串流版本...`);
-                                    // 嘗試下載 720p 串流版本 (m22 = 720p, m18 = 360p)
-                                    // 這通常可以直接下載而不會被擋
                                     const fallbackUrl = `https://lh3.googleusercontent.com/d/${photo.id}=m22`;
                                     fetchPromise = fetch(fallbackUrl).then(res => {
                                         if(!res.ok) throw new Error("Fallback failed");
@@ -1521,7 +1556,6 @@ function proxyShortenUrl(longUrl) {
                                     fetchPromise = response.blob();
                                 }
                             } catch (e) {
-                                // 如果上面都失敗，嘗試最後一招：下載預覽圖當作替代，避免 ZIP 損毀
                                 console.error("影片下載失敗，改存預覽圖", e);
                                 ext = 'jpg';
                                 fetchPromise = fetch(photo.url).then(res => res.blob());
@@ -1557,7 +1591,7 @@ function proxyShortenUrl(longUrl) {
             Swal.fire('下載完成', downloadType === 'original' ? '原始檔案打包完成！(影片如無法下載已自動轉為串流版)' : '快速打包完成！(影片僅含封面)', 'success');
         }
 
-        // --- 設定與分享功能 (修正與新增) ---
+        // --- 設定與分享功能 ---
         
         function updateUploadOptions(albums) {
             const datalist = document.getElementById('album-options');
@@ -1566,7 +1600,6 @@ function proxyShortenUrl(longUrl) {
         }
 
         async function processAndUpload() { 
-            /* 此功能需要後端配合，這裡僅保留結構 */
             const fileInput = document.getElementById('file-input');
             const albumName = document.getElementById('upload-album-name').value;
             if (!fileInput.files.length || !albumName) {
@@ -1647,7 +1680,6 @@ function proxyShortenUrl(longUrl) {
                 // 設定連結
                 const output = document.getElementById('share-url-output');
                 output.value = shareUrl;
-                document.getElementById('open-share-link').href = shareUrl;
                 
                 // 產生 QR Code (使用 QR Server API)
                 document.getElementById('qr-code-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(shareUrl)}`;
