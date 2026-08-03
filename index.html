@@ -1611,7 +1611,7 @@ function proxyShortenUrl(longUrl) {
 
         function openSettings() { document.getElementById('settings-modal').classList.remove('hidden'); }
         function closeSettings() { document.getElementById('settings-modal').classList.add('hidden'); }
-        function toggleVisibility() { const el = document.getElementById('gas-url-input'); el.type = el.type==='password'?'text':'password'; }
+        function toggleVisibility() {     const el = document.getElementById('gas-url-input');     el.type = el.type === 'password' ? 'text' : 'password'; }
         
         // 儲存設定
         function saveSettings() {
